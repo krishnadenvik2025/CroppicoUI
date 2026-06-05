@@ -1,0 +1,329 @@
+.header-bg {
+  border-bottom: 1px solid #ddd;
+  background-color: whitesmoke;
+  color: #2565AE;
+}
+
+.align-column {
+  gap: 5px;
+  flex-direction: column;
+  display: flex;
+  padding: 10px;
+  justify-content: center;
+}
+
+.vertical-line {
+  border-left: 1.5px solid rgb(146, 146, 146);
+  height: 8.5rem;
+}
+
+.space {
+  display: flex;
+  justify-content: space-between;
+  gap: 5px;
+
+}
+
+.mat-card {
+  padding: 0px;
+  width: 25%;
+  text-align: center;
+}
+
+.align-row {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.button-class {
+  border-radius: 40px;
+  min-width: 100px !important;
+}
+
+.p-10 {
+  padding: 10px;
+}
+
+.mat-card-title {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.main-container {
+  display: flex;
+  /* justify-content: center; */
+  gap: 5px;
+  /* margin-top: 20px; */
+  /* height: 10rem; */
+}
+
+.setting-space {
+  height: 300px;
+  width: 1150px;
+  /* background-color: yellow; */
+  display: flex;
+  flex-direction: column;
+  color: black;
+  padding: 10px;
+}
+
+.setting-option {
+  width: 100px;
+  background-color: aqua;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.setting-space > ul > li > a {
+  width: 100%;
+  word-wrap: break-word;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+}
+
+div > input {
+  width: 75px;
+}
+
+form > .field {
+  margin-top: 10px;
+  width: 25%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.field {
+  margin-top: 12px;
+  width: 25%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.outliner {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.outlinewrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+.outlinecontentleft {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.outlinecontentright {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  border-left: 3px solid rgb(146, 146, 146);
+}
+
+.outliner > .field {
+  margin-top: 10px;
+  width: 30%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+form > .subrow {
+  margin-top: 10px;
+  width: 17%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
+
+.wifinames {
+  /* width: 100%; */
+  height: 40px;
+  margin-top: 5px;
+  padding: 10px;
+  box-shadow: 0 1px 0px 0 rgba(0, 0, 0, 0.2);
+  /* z-index: 100; */
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.wifibtn {
+  border: none;
+  outline: none;
+  background-color: white;
+  color: black;
+  /* padding: 14px 28px; */
+  height: 100%;
+}
+
+li > a {
+  width: 50px;
+}
+
+::ng-deep {
+  #radio-button {
+    gap: 20px;
+    display: flex;
+
+    .mat-radio-button.mat-accent.mat-radio-checked .mat-radio-outer-circle {
+      border-color: rgb(66, 134, 244);
+    }
+
+    .mat-radio-button.mat-accent .mat-radio-inner-circle {
+      color: rgb(66, 134, 244);
+      background-color: rgb(66, 134, 244);
+    }
+
+    .mat-radio-button.mat-accent .mat-radio-ripple .mat-ripple-element {
+      background-color: rgb(255, 37, 37, .26)
+    }
+  }
+}
+
+// ─── Pump Settings Tab ────────────────────────────────────────────────────────
+
+.pump-settings-container {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0;
+  padding: 10px 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pump-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #dde3ec;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+}
+
+.pump-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.water-pump-header {
+  background: linear-gradient(90deg, #e8f4fd, #d0eaf8);
+  border-bottom: 2px solid #90caf9;
+  color: #1565c0;
+}
+
+.supplement-pump-header {
+  background: linear-gradient(90deg, #f3e8fd, #e8d5f8);
+  border-bottom: 2px solid #ce93d8;
+  color: #6a1b9a;
+}
+
+.pump-card-icon {
+  font-size: 18px;
+}
+
+.pump-card-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pump-form {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+  padding: 12px 14px 10px;
+  align-items: stretch !important;
+}
+
+.pump-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.pump-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pump-label {
+  font-size: 12.5px;
+  color: #444;
+  font-weight: 500;
+  flex: 1;
+  white-space: nowrap;
+}
+
+.pump-input {
+  width: 90px !important;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid #c5cfe0;
+  border-radius: 5px;
+  font-size: 13px;
+  color: #333;
+  background: #f8fafc;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s;
+
+  &:focus {
+    border-color: #2565AE;
+    background: #fff;
+  }
+}
+
+.pump-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.pump-btn {
+  line-height: 28px !important;
+  height: 30px;
+  font-size: 12px;
+  padding: 0 14px;
+}
+
+.pump-divider {
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, #bfcfe8, transparent);
+  margin: 8px 12px;
+  flex-shrink: 0;
+}

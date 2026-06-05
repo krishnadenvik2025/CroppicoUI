@@ -1,0 +1,30 @@
+.number-button {
+  height: 40px;
+  width: 80px;
+}
+
+input {
+  text-align: center;
+  font-size: larger;
+}
+
+.number-row {
+  display: flex;
+  flex-direction: row;
+  /* height: 40px; */
+  justify-content: space-around;
+}
+
+.number-row>button {
+  width: 100%;
+  height: 50px;
+}
+
+.number-row1 {
+  margin-top: 10px;
+  /* width: 300px; */
+  display: flex;
+  flex-direction: row;
+  /* height: 40px; */
+  justify-content: space-around;
+}

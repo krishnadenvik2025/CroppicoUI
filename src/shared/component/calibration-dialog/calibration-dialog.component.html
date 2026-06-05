@@ -1,0 +1,220 @@
+<div style="transition: all .2s ease-in-out !important;">
+    <!-- Sensor Calibration -->
+    <div *ngIf="dialogData?.calibration =='SENSOR'">
+        <div style="height: 10rem;" *ngIf="isCalibrating == 'false' && !isCalibrationDone">
+
+            <div class="p-10 header-bg">
+                <mat-card-title>{{
+                    dialogData?.solution == "ph"
+                    ?'PH Sensor Calibration'
+                    : dialogData?.solution == "ec"
+                    ? 'EC Sensor Calibration'
+                    :'Flow Sensor Calibration'
+                    }}</mat-card-title>
+                <img class="close-icon" src="../../../assets/images/close.png" (click)="dialogRef.close();
+                dialogData?.calibration =='SENSOR' && sendProcessCount()" />
+
+            </div>
+            <div>
+                <div class="p-10 align-row">
+                    <ng-container *ngFor="let data of calibData; let i = index;">
+                        <button mat-fab color="primary" [disabled]="isDisable[i] || !data.isShow"
+                            (click)="sendCalibData(data,i)">{{data?.value}}</button>
+                    </ng-container>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pump Calibration -->
+    <div *ngIf="dialogData?.calibration =='PUMP'">
+        <div class="p-10 header-bg">
+            <mat-card-title>
+                {{
+                dialogData?.solution == "ec_a_pump"
+                ? 'EC A Pump Calibration'
+                : dialogData?.solution == "ec_b_pump"
+                ? 'EC B Pump Calibration'
+                : dialogData?.solution == "flow_sensor"
+                ? "Flow Sensor Calibration"
+                :''
+                }}
+            </mat-card-title>
+            <img *ngIf="!isPumpLoader || !(isCalibrating == 'false')" class="close-icon"
+                src="../../../assets/images/close.png" (click)="dialogRef.close()" />
+
+        </div>
+        <!-- EC A PUMP AND EC B PUMP -->
+        <div *ngIf="dialogData?.solution" class="p-10 t-a-c">
+
+
+            <!-- info screen -->
+            <div *ngIf="PumpCalibStep == 'INFO'">
+                <!-- <mat-icon class="icon" style="color:#0759de">info</mat-icon> -->
+                <div class="pump-layout">
+                    <div>
+                        <img class="icon-class" src="../../../assets/images/info.png" />
+                    </div>
+
+                    <div class="m-t-10">
+                        <span class="message">
+                            {{
+                            dialogData?.solution == "ec_a_pump"
+                            ? 'Place the EC A Tube Inside the Container!!'
+                            : dialogData?.solution == "ec_b_pump"
+                            ? 'Place the EC B Tube Inside the Container!!'
+                            : dialogData?.solution == "flow_sensor"
+                            ? "Place the output of Flow sensor Tube Inside the Container!!"
+                            :''
+                            }}
+                        </span>
+                    </div>
+
+                    <div>
+                        <button mat-raised-button class="bg-success" (click)="PumpCalibStep = 'WARNING';">Ready to
+                            Measure</button>
+
+                    </div>
+                </div>
+
+
+
+            </div>
+
+            <!-- warning screen -->
+            <div *ngIf="PumpCalibStep == 'WARNING' && !isPumpLoader">
+                <!-- <mat-icon class="icon" style="color:#ff8103">warning</mat-icon> -->
+                <div class="pump-layout">
+
+                    <div class="m-t-10">
+                        <svg class="icon-class" xmlns="http://www.w3.org/2000/svg" width="31.5" height="29.25"
+                            viewBox="0 0 31.5 29.25">
+                            <path id="Icon_ionic-md-warning" data-name="Icon ionic-md-warning"
+                                d="M2.25,32.625h31.5L18,3.375Zm17.438-4.5H16.313V24.75h3.375Zm0-5.625H16.313V15.75h3.375Z"
+                                transform="translate(-2.25 -3.375)" fill="#ffc400" />
+                        </svg>
+                    </div>
+
+                    <div>
+                        <span class="message">Make Sure The tube Is Inside The Container Else Can Result in spillage!!
+                        </span>
+                    </div>
+
+                    <div>
+                        <button mat-raised-button class="bg-success" (click)="startPumpCalibration()">Proceed</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Enter Measured Value -->
+            <div *ngIf="PumpCalibStep == 'ENTER VALUE'">
+
+                <div class="measured-input">
+                    <form #pumpCalib="ngForm">
+                        <div>
+                            <span class="message">Enter Measured Value</span>
+                            <div style="margin-top: 10px;">
+                                <input mat-input type="number" name='pumpCalibration' [(ngModel)]="MeasuredValue"
+                                    (click)="open(pumpCalib,'pumpCalibration')">
+
+                            </div>
+                        </div>
+                        <div class="align-end">
+                            <button mat-raised-button class="bg-success" (click)="sendMeasuredValue()">Submit</button>
+
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Loaders -->
+    <div style="margin-top: 5px;" *ngIf="isCalibrating === 'true' && !isCalibrationDone" class="loader">
+
+        <div class="clock m-t-20">
+            <div class="cup top">
+                <div class="sand"></div>
+            </div>
+            <div class="cup">
+                <div class="sand delayed"></div>
+            </div>
+        </div>
+        <div class="m-t-10 message">Calibrating...</div>
+    </div>
+
+
+    <!-- Calibration Done!! -->
+    <div *ngIf="isCalibrationDone" style="margin-top: 15px;">
+
+        <div class="pump-layout p-10">
+
+            <div class="m-t-10">
+                <svg class="svg-green" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
+                    <circle class="path circle" fill="none" stroke="#73AF55" stroke-width="6" stroke-miterlimit="10" cx="65.1"
+                        cy="65.1" r="62.1" />
+                    <polyline class="path check" fill="none" stroke="#73AF55" stroke-width="6" stroke-linecap="round"
+                        stroke-miterlimit="10" points="100.2,40.2 51.5,88.8 29.8,67.5 " />
+                </svg>
+            </div>
+
+            <div>
+                <p class="success">Calibration Done!!
+                </p>
+            </div>
+
+            <div style="display: flex;justify-content: center;">
+                <button mat-raised-button class="bg-failed" (click)="dialogRef.close();">Close</button>
+            </div>
+        </div>
+
+        
+        <!-- <p class="success">Calibration Done!!</p>
+        <div>
+            <button mat-raised-button class="bg-failed" (click)="dialogRef.close();">close</button>
+        </div> -->
+    </div>
+
+    <!-- Failed Message!! -->
+    <div *ngIf="isError" style="text-align: center;">
+
+        <div class="pump-layout p-10">
+
+            <div class="m-t-10">
+                <img class="icon-class" src="../../../assets/images/cross.png" />
+            </div>
+
+            <div>
+                <span class="message">Process Failed :(
+                </span>
+            </div>
+
+            <div>
+                <button mat-raised-button class="bg-failed" (click)="dialogRef.close();">Close</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- pump loader  -->
+
+    <div *ngIf="isPumpLoader">
+        <Div class="t-a-c m-t-20 p-10">
+            <div class="gears" id="two-gears">
+                <div class="gears-container">
+                    <div class="gear-rotate"></div>
+                    <div class="gear-rotate-left"></div>
+                </div>
+
+            </div>
+            <div class="message"> {{this.dialogData?.solution == 'flow_sensor' ? 'Water':''}} Pump Turned On...</div>
+        </Div>
+
+    </div>
+
+</div>

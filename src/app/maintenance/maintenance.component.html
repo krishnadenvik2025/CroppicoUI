@@ -1,0 +1,73 @@
+<!-- <div class="adhoc-space">
+  <form #adHocSettings="ngForm" (ngSubmit)="updateAdhocSettings(adHocSettings)">
+    <div class="field subrow">Water pump <input type="number" name='water_pump' [(ngModel)]="adhocSet.water_pump"
+        (click)="open(adHocSettings,'water_pump')">( 0 - 5 mins)</div>
+    <div class="field subrow">Water chiller <input type="number" name='water_temperature_time'
+        [(ngModel)]="adhocSet.water_temperature_time" (click)="open(adHocSettings,'water_temperature_time')">( 0 -
+      10 mins)</div>
+    <div class="field subrow">EC dose pump <input type="number" name='ec_pump' [(ngModel)]="adhocSet.ec_pump"
+        (click)="open(adHocSettings,'ec_pump')">( 0 - 60 secs)</div>
+    <div class="field subrow">pH icnrease dose pump <input type="number" name='ph_inc_pump'
+        [(ngModel)]="adhocSet.ph_inc_pump" (click)="open(adHocSettings,'ph_inc_pump')">( 0 - 60 secs)</div>
+    <div class="field subrow">pH decrease dose pump <input type="number" name='ph_decc_pump'
+        [(ngModel)]="adhocSet.ph_decc_pump" (click)="open(adHocSettings,'ph_decc_pump')">( 0 - 60 secs)</div>
+    <div class="subbtn"><input type="submit" value="Update"></div>
+  </form>
+</div> -->
+
+<div class="adhoc-space">
+  <form #adHocSettings="ngForm">
+    <table>
+      <tr class="field subrow">
+        <td>Water pump</td>
+        <td><input type="number" name='water_pump' [(ngModel)]="adhocSet.water_pump"
+            (click)="open(adHocSettings,'water_pump')"></td>
+        <td>( 0 - 5 mins)</td>
+      </tr>
+      <tr class="field subrow">
+        <td>Water chiller </td>
+        <td><input type="number" name='water_temperature_time' [(ngModel)]="adhocSet.water_temperature_time"
+            (click)="open(adHocSettings,'water_temperature_time')"></td>
+        <td>( 0 - 10 mins)</td>
+      </tr>
+      <tr class="field subrow">
+        <td>EC dose pump</td>
+        <td><input type="number" name='ec_pump' [(ngModel)]="adhocSet.ec_pump" (click)="open(adHocSettings,'ec_pump')">
+        </td>
+        <td>( 0 - 60 secs)</td>
+      </tr>
+      <tr class="field subrow">
+        <td>pH increase dose pump</td>
+        <td><input type="number" name='ph_inc_pump' [(ngModel)]="adhocSet.ph_inc_pump"
+            (click)="open(adHocSettings,'ph_inc_pump')"></td>
+        <td>( 0 - 60 secs)</td>
+      </tr>
+      <tr class="field subrow">
+        <td>pH decrease dose pump</td>
+        <td><input type="number" name='ph_decc_pump' [(ngModel)]="adhocSet.ph_decc_pump"
+            (click)="open(adHocSettings,'ph_decc_pump')"></td>
+        <td>( 0 - 60 secs)</td>
+      </tr>
+      <tr class="field subrow">
+        <td>Flush pump</td>
+        <td><input type="number" name='flush_pump' [(ngModel)]="adhocSet.flush_pump"
+            (click)="open(adHocSettings,'flush_pump')"></td>
+        <td>( 0 - 5 mins)</td>
+      </tr>
+      <tr class="field subrow">
+        <td>Topup pump</td>
+        <td><input type="number" name='topup_pump' [(ngModel)]="adhocSet.topup_pump"
+            (click)="open(adHocSettings,'topup_pump')"></td>
+        <td>( 0 - 5 mins)</td>
+      </tr>
+      <tr>
+        <div class="subbtn">
+          <div style="margin-top: 17px;height: 30px;margin-top: -0.1px;" class="subrow"><button mat-raised-button disableOneSec
+              class="bg-success clickable-button" (click)="updateAdhocSettings(adHocSettings)" type="submit">Update</button>
+            <!-- <button mat-raised-button style="line-height: 10px;" class="bg-failed">Cancel</button> -->
+          </div>
+        </div>
+      </tr>
+    </table>
+  </form>
+</div>

@@ -1,0 +1,16 @@
+<div style="transition: all .2s ease-in-out !important;">
+    <div style="overflow: hidden;">
+        <div class="header-bg">
+            <div></div>
+            <img style="height: 25px;padding-right: 10px;" class="close-icon" src="../../../assets/images/close.png"
+                (click)="dialogRef.close()" />
+        </div>
+        <div id="chart" style="padding-left: 4px;">
+            <apx-chart [series]="chartOptions.series!" [chart]="chartOptions.chart!" [xaxis]="chartOptions.xaxis!"
+                [stroke]="chartOptions.stroke!" [tooltip]="chartOptions.tooltip" [dataLabels]="chartOptions.dataLabels!"
+                [legend]="chartOptions.legend!" [markers]="chartOptions.markers!" [grid]="chartOptions.grid!"
+                [yaxis]="chartOptions.yaxis!" [title]="chartOptions.title!"></apx-chart>
+        </div>
+
+    </div>
+</div>

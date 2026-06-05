@@ -1,0 +1,8 @@
+<div style="text-align:center; padding-top: 20px;padding-bottom: 20px;">
+	<div style="margin: 5px; text-align: center;">
+		<p>SSID: {{defVal}}</p>
+		<input [matKeyboard]="'en-GB'" class="input" type="text" [(ngModel)]="wifipassword" />
+	</div>
+	<button (click)="cancel()">Cancel</button>
+	<button (click)="submit()">Connect</button>
+</div>

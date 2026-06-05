@@ -1,0 +1,99 @@
+.header-bg {
+    border-bottom: 1px solid #ddd;
+    background-color: whitesmoke;
+    color: #2565AE;
+}
+
+.button-class {
+    border-radius: 40px;
+    min-width: 100px !important;
+}
+
+.p-10 {
+    padding: 10px;
+}
+
+.mat-card-title {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.icon {
+    font-size: 4rem;
+    width: 5rem;
+    height: 5rem;
+}
+
+.bg-success {
+    font-family: Roboto;
+    font-size: 14px;
+    font-weight: 500;
+    background-color: #0dbd16 !important;
+    color: white;
+    margin-top: 15px;
+}
+
+.bg-failed {
+    font-family: Roboto;
+    font-size: 14px;
+    font-weight: 500;
+    background-color: #ea2d3f !important;
+    color: white;
+    margin-top: 15px;
+}
+
+
+
+a.bg-success:focus,
+a.bg-success:hover,
+button.bg-success:focus,
+button.bg-success:hover {
+    background-color: #0dbd16 !important;
+}
+
+.message {
+    font-size: larger;
+    font-weight: 500;
+    margin: 5px;
+}
+
+.close-icon {
+    width: 2rem;
+    height: 2rem;
+    z-index: 2;
+    cursor: pointer;
+    opacity: 1;
+}
+
+.white {
+    filter: brightness(0) invert(1) drop-shadow(1px 3px 2px black);
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+.icon-class {
+    width: 5rem;
+    height: 5rem;
+}
+
+
+.key-pad-close {
+    position: absolute;
+    right: 14.5rem;
+    top: 7.5rem;
+    transition: all 2.0s;
+}
+
+.hide-key-pad {
+
+    transition: all 2.0s;
+    display: none;
+
+}

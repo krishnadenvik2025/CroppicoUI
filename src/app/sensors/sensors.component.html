@@ -1,0 +1,114 @@
+<div class="sensors-container">
+    <!-- Card 1: PM 2.5 -->
+    <div class="sensor-card">
+        <div class="sensor-center">
+            <svg width="40" height="40" viewBox="0 0 46 46">
+                <!-- Cloud/Brain shape inside -->
+                <path d="M 12 25 C 8 25 8 18 14 18 C 15 13 22 10 27 13 C 31 10 37 13 38 18 C 42 19 42 26 36 27 C 38 31 32 35 28 32 C 26 35 20 35 18 32 C 14 34 8 30 12 25 Z" fill="none" stroke="#536dfe" stroke-width="2.5" />
+                <text x="23.5" y="22" fill="#536dfe" font-size="7" font-weight="900" text-anchor="middle">PM2.5</text>
+            </svg>
+            <div class="sensor-value-group">
+                <span class="sensor-value">{{ getPM2p5(sensorsData?.pm2p5) | number:'1.2-2' }}</span>
+                <span class="sensor-unit">μg/m³</span>
+            </div>
+        </div>
+        <div class="sensor-title">PM 2.5</div>
+    </div>
+
+    <!-- Card 2: VOC -->
+    <div class="sensor-card">
+        <div class="sensor-center">
+            <svg width="40" height="40" viewBox="0 0 40 40">
+                <!-- Molecule -->
+                <circle cx="15" cy="26" r="3.5" fill="none" stroke="#536dfe" stroke-width="2" />
+                <circle cx="25" cy="15" r="3.5" fill="none" stroke="#536dfe" stroke-width="2" />
+                <circle cx="31" cy="28" r="3" fill="none" stroke="#536dfe" stroke-width="2" />
+                <circle cx="8" cy="12" r="2" fill="none" stroke="#536dfe" stroke-width="2" />
+                <circle cx="10" cy="34" r="2" fill="none" stroke="#536dfe" stroke-width="2" />
+                <circle cx="22" cy="7" r="2" fill="none" stroke="#536dfe" stroke-width="2" />
+                <line x1="15" y1="26" x2="25" y2="15" stroke="#536dfe" stroke-width="2" />
+                <line x1="15" y1="26" x2="31" y2="28" stroke="#536dfe" stroke-width="2" />
+                <line x1="15" y1="26" x2="10" y2="34" stroke="#536dfe" stroke-width="2" />
+                <line x1="25" y1="15" x2="8" y2="12" stroke="#536dfe" stroke-width="2" />
+                <line x1="25" y1="15" x2="22" y2="7" stroke="#536dfe" stroke-width="2" />
+            </svg>
+            <div class="sensor-value-group">
+                <span class="sensor-value">{{ getVOC(sensorsData?.voc) | number:'1.2-2' }}</span>
+                <span class="sensor-unit">μg/m³</span>
+            </div>
+        </div>
+        <div class="sensor-title">VOC</div>
+    </div>
+
+    <!-- Card 3: CO2 -->
+    <div class="sensor-card">
+        <div class="sensor-center">
+            <svg width="40" height="40" viewBox="0 0 50 40">
+                <path d="M 12 21 C 8 21 8 31 16 31 L 38 31 C 45 31 45 20 38 20 C 35 12 24 12 20 18 C 18 16 15 16 12 21 Z" fill="none" stroke="#536dfe" stroke-width="2.5" />
+                <text x="25" y="24" fill="#536dfe" font-size="8" font-weight="900" text-anchor="middle">CO₂</text>
+            </svg>
+            <div class="sensor-value-group">
+                <span class="sensor-value">{{ getCO2(sensorsData?.co2) | number:'1.0-0' }}</span>
+                <span class="sensor-unit">ppm</span>
+            </div>
+        </div>
+        <div class="sensor-title">CO2</div>
+    </div>
+
+    <!-- Card 4: Temperature -->
+    <div class="sensor-card">
+        <div class="sensor-center">
+            <svg width="40" height="40" viewBox="0 0 40 40">
+                <rect x="13" y="6" width="10" height="20" rx="5" fill="none" stroke="#536dfe" stroke-width="2.5" />
+                <circle cx="18" cy="28" r="6" fill="none" stroke="#536dfe" stroke-width="2.5" />
+                <circle cx="18" cy="28" r="3" fill="#536dfe" />
+                <line x1="18" y1="28" x2="18" y2="18" stroke="#536dfe" stroke-width="2.5" stroke-linecap="round" />
+            </svg>
+            <div class="sensor-value-group">
+                <span class="sensor-value">{{ getTemp(sensorsData?.temp) | number:'1.2-2' }}</span>
+                <span class="sensor-unit">°C</span>
+            </div>
+        </div>
+        <div class="sensor-title">Ambient Temperature</div>
+    </div>
+
+    <!-- Card 5: Humidity -->
+    <div class="sensor-card">
+        <div class="sensor-center">
+            <svg width="40" height="40" viewBox="0 0 40 40">
+                <path d="M 20 8 C 20 8 8 20 8 26 C 8 32 13 37 20 37 C 27 37 32 32 32 26 C 32 20 20 8 20 8 Z" fill="none" stroke="#536dfe" stroke-width="2.5" />
+                <text x="21" y="29" fill="#536dfe" font-size="10" font-weight="900" text-anchor="middle">
+                    <tspan dx="0" dy="0" fill="#536dfe">%</tspan>
+                </text>
+            </svg>
+            <div class="sensor-value-group">
+                <span class="sensor-value">{{ getHum(sensorsData?.hum) | number:'1.2-2' }}</span>
+                <span class="sensor-unit">%</span>
+            </div>
+        </div>
+        <div class="sensor-title">Ambient Humidity</div>
+    </div>
+
+    <!-- Card 6: Outdoor Air Quality -->
+    <div class="sensor-card">
+        <div class="sensor-center">
+            <svg width="40" height="40" viewBox="0 0 40 40">
+                <path d="M 20 8 C 20 8 8 20 8 26 C 8 32 13 37 20 37 C 27 37 32 32 32 26 C 32 20 20 8 20 8 Z" fill="none" stroke="#536dfe" stroke-width="2.5" />
+                <!-- Added a tiny leaf to droplet for OAQ -->
+                <path d="M 19 14 C 15 14 12 11 12 11 C 13 16 16 18 19 18" fill="none" stroke="#536dfe" stroke-width="1.5"/>
+            </svg>
+            <div class="sensor-value-group">
+                <span class="sensor-value">{{ getOAQPm2p5() | number:'1.2-2' }}</span>
+                <span class="sensor-unit">μg/m³</span>
+            </div>
+        </div>
+        <div class="sensor-title">Outdoor Air Quality</div>
+    </div>
+
+    <!-- Remaining 4 empty cards to fill the 2x5 grid -->
+    <div class="sensor-card empty"></div>
+    <div class="sensor-card empty"></div>
+    <div class="sensor-card empty"></div>
+    <div class="sensor-card empty"></div>
+
+</div>

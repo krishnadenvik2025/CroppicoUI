@@ -1,0 +1,59 @@
+<div style="height: 100%;">
+
+    <div style="display: flex;justify-content: end;padding: 8px;">
+        <img class="close-icon" src="../../../assets/images/close.png" (click)="dialogRef.close()" />
+    </div>
+
+
+    <div *ngIf="dialogData?.module !== 'wifi'" class="container">
+        <div style="margin-top: 1rem;">
+            <form #auth="ngForm">
+                <mat-form-field>
+                    <input matInput (click)="open(auth,'pass')" name="pass" placeholder="Password"
+                        [type]="hide ? 'password' : 'text'" [formControl]="password" required>
+                    <img matSuffix (click)="hide = !hide" style="width: 1.5rem;" [src]="hide ? '../../../assets/images/visiblity_off.png' 
+                        : '../../../assets/images/visiblity_on.png'" alt="">
+                    <!-- <mat-icon matSuffix >{{hide ? 'visibility_off' : 'visibility'}}</mat-icon> -->
+                    <mat-error *ngIf="password.hasError('required')">Enter Password</mat-error>
+                    <mat-error *ngIf="password.hasError('incorrect')">Incorrect Password</mat-error>
+                </mat-form-field>
+            </form>
+
+            <div>
+                <button mat-raised-button class="bg-success" (click)="isValidPassword()">Submit</button>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Wifi  -->
+
+    <div *ngIf="dialogData?.module == 'wifi'" class="container">
+        <div>
+            <div style="font-weight: 500;margin-bottom: 10px;">{{dialogData?.wifiName}}</div>
+            <form #auth="ngForm">
+                <mat-form-field>
+                    <input matInput name="pass" placeholder="Password" [matKeyboard]="'en-GB'"
+                        (focus)="closeKeyboard = true" (focusout)="closeKeyboard = false"
+                        [type]="hide ? 'password' : 'text'" [formControl]="wifiPassword" required>
+                    <img matSuffix (click)="hide = !hide" style="width: 1.5rem;" [src]="hide ? '../../../assets/images/visiblity_off.png' 
+                        : '../../../assets/images/visiblity_on.png'" alt="">
+                    <!-- <mat-error *ngIf="password.hasError('required')">Enter Password</mat-error> -->
+                    <!-- <mat-error *ngIf="password.hasError('incorrect')">Incorrect Password</mat-error> -->
+                </mat-form-field>
+            </form>
+
+            <div style="display: flex;gap: 11px; justify-content: center;">
+                <button mat-raised-button class="bg-failed" (click)="dialogRef.close()">Cancel</button>
+                <button mat-raised-button class="bg-success" (click)="sendPassword()">Submit</button>
+
+            </div>
+            <div [ngClass]="{'key-pad-close':closeKeyboard,'hide-key-pad':!closeKeyboard}">
+                <img class="close-icon white" src="../../../assets/images/close.png" (click)="dialogRef.close()" />
+            </div>
+        </div>
+
+    </div>
+
+</div>

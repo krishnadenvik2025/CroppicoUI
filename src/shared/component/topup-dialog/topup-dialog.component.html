@@ -1,0 +1,170 @@
+<div style="transition: all .2s ease-in-out !important;">
+    <div>
+        <div class="p-10 header-bg">
+            <mat-card-title>
+                {{
+                dialogData?.title 
+                
+                }}
+            </mat-card-title>
+            <img *ngIf="!(topup_status=='IN-PROGRESS')" class="close-icon" src="../../../assets/images/close.png"
+                (click)="dialogRef.close()" />
+
+        </div>
+
+        <!-- info screen -->
+        <div *ngIf="topup_status == 'INFO' && dialogData.title != 'user_error'" class="p-10 t-a-c">
+            <!-- <mat-icon class="icon" style="color:#0759de">info</mat-icon> -->
+            <div class="info-layout">
+                <div>
+                    <img class="icon-class" src="../../../assets/images/info.png" />
+                </div>
+
+                <div class="m-t-10">
+                    <span class="message" style="margin: 0;">
+                        Are you sure want to topup water from the tank!!
+                    </span>
+                </div>
+
+                <div>
+                    <button mat-raised-button class="bg-success" (click)="topup_status = 'WARNING';">Next</button>
+                </div>
+            </div>
+
+
+
+        </div>
+        <!-- flush warning message -->
+        <div *ngIf="topup_status=='WARNING'" class="p-10 t-a-c">
+
+            <!-- warning screen -->
+            <div>
+                <!-- <mat-icon class="icon" style="color:#ff8103">warning</mat-icon> -->
+                <div class="pump-layout">
+
+                    <div class="m-t-10">
+                        <svg class="icon-class" xmlns="http://www.w3.org/2000/svg" width="31.5" height="29.25"
+                            viewBox="0 0 31.5 29.25">
+                            <path id="Icon_ionic-md-warning" data-name="Icon ionic-md-warning"
+                                d="M2.25,32.625h31.5L18,3.375Zm17.438-4.5H16.313V24.75h3.375Zm0-5.625H16.313V15.75h3.375Z"
+                                transform="translate(-2.25 -3.375)" fill="#ffc400" />
+                        </svg>
+                    </div>
+
+                    <div>
+                        <span class="message">Make Sure The tube Is Inside The Container!!
+                        </span>
+                    </div>
+
+                    <div>
+                        <button mat-raised-button class="bg-success" (click)="topupWaterFn('start')">Topup</button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Loaders -->
+    <div *ngIf="topup_status=='IN-PROGRESS'" style="margin-top: 5px;position: relative;" class="loader">
+
+        <div class="clock m-t-20">
+            <div class="cup top">
+                <div class="sand"></div>
+            </div>
+            <div class="cup">
+                <div class="sand delayed"></div>
+            </div>
+        </div>
+        <div class="m-t-10 message">Topuping...</div>
+        <div style="position: absolute;bottom: 12px;right: 18px;"> <button mat-raised-button
+                style="line-height: 25px;margin-top: 0;" class="bg-failed" (click)="topupWaterFn('stop')">Stop</button>
+        </div>
+    </div>
+
+
+    <!-- Flush Done!! -->
+    <div *ngIf="topup_status=='DONE'" style="margin-top: 15px;">
+        <svg class="svg-green" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
+            <circle class="path circle" fill="none" stroke="#73AF55" stroke-width="6" stroke-miterlimit="10" cx="65.1"
+                cy="65.1" r="62.1" />
+            <polyline class="path check" fill="none" stroke="#73AF55" stroke-width="6" stroke-linecap="round"
+                stroke-miterlimit="10" points="100.2,40.2 51.5,88.8 29.8,67.5 " />
+        </svg>
+        <p class="success">Topup Success!</p>
+    </div>
+    <div *ngIf="topup_status=='FAILED'" style="text-align: center;">
+
+        <div class="pump-layout p-10">
+
+            <div class="m-t-10">
+                <img class="icon-class" src="../../../assets/images/cross.png" />
+            </div>
+
+            <div>
+                <span class="message">Please try again after sometime
+                </span>
+            </div>
+
+            <!-- <div>
+                <button mat-raised-button class="bg-failed" (click)="dialogRef.close();">close</button>
+            </div> -->
+        </div>
+    </div>
+
+    <div *ngIf="topup_status=='STOP'" style="margin-top: 15px;">
+        <div class="m-t-10" style="text-align: center;">
+            <svg class="icon-class" xmlns="http://www.w3.org/2000/svg" width="31.5" height="29.25"
+                viewBox="0 0 31.5 29.25">
+                <path id="Icon_ionic-md-warning" data-name="Icon ionic-md-warning"
+                    d="M2.25,32.625h31.5L18,3.375Zm17.438-4.5H16.313V24.75h3.375Zm0-5.625H16.313V15.75h3.375Z"
+                    transform="translate(-2.25 -3.375)" fill="#ffc400" />
+            </svg>
+        </div>
+        <p class="success">Topup stopped !</p>
+    </div>
+<!-- CLOG SCREEN -->
+    <div *ngIf="topup_status=='CLOG'" style="text-align: center;">
+
+        <div class="pump-layout p-10">
+
+            <div class="m-t-10">
+                <img class="icon-class" src="../../../assets/images/cross.png" />
+            </div>
+
+            <div>
+                <span class="message">Please check for any clog in the valve and try again 
+                </span>
+            </div>
+
+            <!-- <div>
+                <button mat-raised-button class="bg-failed" (click)="dialogRef.close();">close</button>
+            </div> -->
+        </div>
+    </div>
+    <!-- user error conformation  screen -->
+    <div *ngIf="dialogData.title == 'user_error'" class="p-10 t-a-c">
+        <!-- <mat-icon class="icon" style="color:#0759de">info</mat-icon> -->
+        <div class="info-layout">
+            <div>
+                <img class="icon-class" src="../../../assets/images/info.png" />
+            </div>
+
+            <div class="m-t-10">
+                <span class="message" style="margin: 0;">
+                    Are you sure want to Reset Error!!
+                </span>
+            </div>
+
+            <div>
+                <button mat-raised-button class="bg-success" (click)="userError()">Confirm</button>
+            </div>
+        </div>
+
+
+
+    </div>
+</div>

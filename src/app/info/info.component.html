@@ -1,0 +1,12 @@
+<mat-card id="container" class="mat-elevation-z8">
+    <div class="row-warp-class">
+        <ng-container *ngFor="let data of infoData">
+            <div>
+                <div class="header-bg p-10" *ngIf="data.key !== 'EC DOSE TIME' && data.key !== 'PH DOWN DOSE TIME' && data.key !== 'PH UP DOSE TIME'">
+                    {{data.key}}
+                    <div style="color: black;font-size: 14px;margin-top: 4px;"> {{data.value}}</div>
+                </div>
+            </div>
+        </ng-container>
+    </div>
+</mat-card>

@@ -1,0 +1,228 @@
+.home-body {
+  width: 1280px;
+  height: 350px;
+  margin: 0;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  color: #262626;
+}
+
+img.info {
+  height: 45px;
+  width: 45px;
+  transition: all 0.3s;
+  margin: 5px;
+}
+
+img.update {
+  height: 2.5rem;
+  width: 2.5rem;
+  /* margin-top: 12px; */
+  transition: all 0.3s;
+}
+
+.disable-class {
+  pointer-events: none !important;
+  cursor: pointer !important;
+}
+
+.bounce:active {
+  box-shadow: 0px 4px 8px rgba(darken(dodgerblue, 30%));
+  transform: scale(.58)
+}
+
+.light-bar {
+  width: 80px;
+  padding: 5px;
+}
+
+.light-backdrop {
+  width: 70px;
+  height: 480px;
+  background-color: #ffffff;
+  border-radius: 60px;
+  padding-top: 25px;
+  display: flex;
+  flex-direction: column;
+}
+
+.light-backdrop .switch-backdrop {
+  height: 50px;
+  margin: 5px;
+  border-radius: 10px;
+  display: block;
+  align-items: center;
+  background-color: #ffffff;
+  /* z-index: 10; */
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.4);
+  padding-top: 15px;
+}
+
+.light-backdrop .switch-backdrop > ui-switch {
+  margin: 13px;
+}
+
+/* .switch-panel{
+    display: block;
+} */
+
+.birghtness-slider {
+  padding: 20px;
+}
+
+.birghtness-slider > ngx-slider {
+  /* margin-top: 20px; */
+  margin-left: 12px;
+  height: 270px;
+}
+
+.light-backdrop .brightness-button {
+  position: absolute;
+  height: 60px;
+  margin: 5px;
+  margin-top: 300px;
+  border-radius: 10px;
+  display: block;
+  align-items: center;
+  background-color: #6d6d6d;
+  padding: 5px;
+  /* padding-top: 1px; */
+}
+
+.content-space {
+  width: 1200px;
+  display: flex;
+  flex-direction: column;
+  /* height: 480px; */
+  /* background-color: aliceblue; */
+}
+
+.content-space > .top-bar {
+  margin-top: 10px;
+  height: 50px;
+  width: 1200px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  /* color: #FFFFFF; */
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+.top-bar > .notification-pane {
+  width: 400px;
+  height: 100%;
+  border-radius: 30px;
+  background-color: #696969;
+  /* margin-left: 10px; */
+}
+
+.top-bar > .warning-pane {
+  width: 400px;
+  height: 100%;
+  border-radius: 30px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+.notification-icon {
+  margin-left: 10px;
+  margin-top: 10px;
+}
+
+.warning-icon {
+  margin-right: 10px;
+  margin-top: 10px;
+}
+
+.top-bar > .clock-pane {
+  width: 300px;
+  height: 100%;
+  border-radius: 30px;
+  text-align: center;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  color: black
+}
+
+.data-space {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.data-space > .data-circles {
+  padding-top: 30px;
+  display: flex;
+  flex-direction: row;
+  /* padding-left: 100px; */
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  /* background-color: aqua; */
+}
+
+.data-circles > .water-status-circle {
+  margin-left: 80px;
+  display: flex;
+  flex-direction: column;
+}
+
+.data-circles > .water-status-circle > apx-chart {
+  margin-top: -10px;
+  height: 350px;
+  position: fixed;
+  /* z-index: 999; */
+  /* background-color: rgba(199, 255, 249, 0.5); */
+}
+
+.water-status-circle > .water-status-data {
+  margin-top: 120px;
+  margin-left: 45px;
+  color: black;
+  /* background-color: rgba(223, 118, 223,0.5); */
+  /* z-index: 9; */
+}
+
+.data-circles > .ambience-status-circle {
+  margin-left: 280px;
+  height: 250px;
+  position: fixed;
+  /* background-color: rgba(233, 97, 73,0.5); */
+}
+
+.data-circles > .ambience-status-circle > apx-chart {
+  margin-top: -170px;
+  position: fixed;
+  height: 200px;
+  /* z-index: 9991; */
+  /* background-color: aquamarine; */
+}
+
+.ambience-status-circle > .ambience-status-data {
+  color: black;
+  margin-top: 80px;
+  margin-left: 180px;
+  /* z-index: 19; */
+  /* background-color: rgba(94, 64, 230, 0.5); */
+}
+
+.content-space > .footer {
+  height: 80px;
+  width: 1200px;
+  margin-top: 310px;
+  position: fixed;
+  display: flex;
+  padding: 5px;
+  flex-direction: row-reverse;
+  background-color: #ffffff;
+  /* background-color: rgba(89, 190, 94, 0.5) */
+}
+
+.screen-save-element {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: background-image 0.5s ease-in-out;
+}

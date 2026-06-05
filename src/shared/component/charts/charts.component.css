@@ -1,0 +1,6 @@
+.header-bg {
+    /* border-bottom: 1px solid #ddd;
+    background-color: whitesmoke; */
+    display: flex;
+    justify-content: space-between
+}

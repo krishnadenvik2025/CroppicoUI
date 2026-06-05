@@ -1,0 +1,322 @@
+.data-space {
+    height: 250px;
+    display: flex;
+    flex-direction: column;
+    background-color: aqua;
+  }
+  
+  .data-space>.data-circles {
+    padding-top: 5px;
+    display: flex;
+    flex-direction: row;
+    /* padding-left: 100px; */
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    /* background-color: aqua; */
+  }
+  
+  .data-circles>.water-status-circle {
+    margin-left: 80px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .data-circles>.water-status-circle>apx-chart {
+    margin-top: -10px;
+    height: 350px;
+    position: fixed;
+    z-index: 999;
+    /* background-color: rgba(199, 255, 249, 0.5); */
+  }
+  
+  .water-status-circle>.water-status-data {
+    margin-top: 20px;
+    margin-left: 45px;
+    color: black;
+    /* background-color: rgba(223, 118, 223,0.5); */
+    z-index: 9;
+  }
+  
+  .data-circles>.ambience-status-circle {
+    margin-left: 500px;
+    height: 250px;
+    position: fixed;
+    /* background-color: rgba(233, 97, 73,0.5); */
+  }
+  
+  .data-circles>.ambience-status-circle>apx-chart {
+    margin-top: -170px;
+    position: fixed;
+    height: 200px;
+    z-index: 9991;
+    /* background-color: aquamarine; */
+  }
+  
+  .ambience-status-circle>.ambience-status-data {
+    color: black;
+    margin-top: 75px;
+    margin-left: 80px;
+    z-index: 19;
+    /* background-color: rgba(94, 64, 230, 0.5); */
+  }
+
+  .grid-container {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: auto auto auto auto auto;
+    background-color: #ffffff;
+    padding: 2px;
+  }
+  
+  .grid-item {
+    background-color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.0);
+    z-index: 10;
+    box-shadow:  0 4px 8px 0 rgba(0,0,0,0.2);
+    height: 100px;
+    font-size: 30px;
+    text-align: center;
+    margin: 10px;
+  }
+
+  /* Swipe Container */
+  .swipe-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .screen-content {
+    width: 100%;
+    height: 100%;
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  
+  /* Pagination Dots */
+  .pagination-dots {
+    position: absolute;
+    bottom: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 20;
+  }
+  
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s;
+  }
+  
+  .dot.active {
+    background-color: #595bd4;
+  }
+
+  /* Screen Wrapper */
+  .screen-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+  }
+
+  .screen-footer {
+    position: fixed;
+    bottom: 350px;
+    right: 720px; /* Just to the left of the Home button */
+    font-size: 16px;
+    font-weight: bold;
+    color: #1e62d0; /* Match the aesthetic blue */
+    background: transparent;
+    box-shadow: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    z-index: 9999;
+    text-align: right;
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  /* Screen 1: Air Quality Tall Cards */
+  .screen-1 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    padding: 10px 15px 5px 15px;
+    flex: 1;
+  }
+  
+  .aq-card {
+    flex: 1;
+    height: 100%;
+    border-radius: 12px;
+    padding: 25px 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    border: none;
+  }
+  
+  .aq-card.green { background: linear-gradient(180deg, #f0fdf4 0%, #e8fbed 100%); }
+  .aq-card.blue { background: linear-gradient(180deg, #f4f9ff 0%, #edf5fd 100%); }
+  .aq-card.purple { background: linear-gradient(180deg, #faf5ff 0%, #f4eaff 100%); }
+  .aq-card.orange { background: linear-gradient(180deg, #fff7ed 0%, #ffefe0 100%); }
+  
+  .aq-title {
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .aq-card.green .aq-title { color: #1e7039; }
+  .aq-card.blue .aq-title { color: #1e62d0; }
+  .aq-card.purple .aq-title { color: #8839d3; }
+  .aq-card.orange .aq-title { color: #bc4c2a; }
+  
+  .aq-title-sub {
+    font-size: 11px;
+    color: #999;
+    margin-top: 2px;
+  }
+  
+  .aq-circle-wrap { flex: 1; display: flex; align-items: center; justify-content: center; }
+  
+  .aq-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 8px solid #047857; /* Dark green by default */
+    border-left-color: #d1fae5 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: 800;
+    margin: 10px auto;
+  }
+  
+  .aq-value-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .aq-value {
+    font-size: 48px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -2px;
+  }
+  
+  .aq-card.green .aq-value { color: #28303d; } /* Dark charcoal for 0 inside circle */
+  .aq-card.blue .aq-value { color: #0265a7; }
+  .aq-card.purple .aq-value { color: #9c2598; }
+  .aq-card.orange .aq-value { color: #c4401c; }
+  
+  .aq-unit {
+    font-size: 12px;
+    font-weight: 800;
+    color: #9ca3af;
+    margin-top: 8px;
+  }
+  
+  .aq-status {
+    align-self: center;
+    padding: 6px 20px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    
+  }
+  
+  .aq-card.green .aq-status { background-color: #34d399 !important; color: #fff !important; }
+  .aq-card.blue .aq-status { background-color: #bfdbfe; color: #1d4ed8; }
+  .aq-card.purple .aq-status { background-color: #f0abfc; color: #701a75; }
+  .aq-card.orange .aq-status { background-color: #fb923c; color: #fff; }
+  
+  /* Screen 2: Impact Thin Cards Grids */
+  .screen-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    padding: 10px 15px 5px 15px;
+    flex: 1;
+  }
+  
+  .impact-card {
+    border-radius: 12px;
+    padding: 15px;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid rgba(0,0,0,0.05);
+  }
+  
+  .impact-card.green { background-color: #f6fdf6; border-color: #d1f0d1; }
+  .impact-card.blue { background-color: #f2f7fd; border-color: #c8def4; }
+  .impact-card.orange { background-color: #fffaf0; border-color: #fae2cc; }
+  .impact-card.purple { background-color: #fbf5fe; border-color: #ebd1fa; }
+  
+  .impact-header {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .impact-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #555;
+  }
+  
+  .impact-subtitle {
+    font-size: 11px;
+    color: #999;
+  }
+  
+  .impact-value {
+    font-size: 32px;
+    font-weight: bold;
+    margin-top: 10px;
+  }
+  
+  .impact-card.green .impact-value { color: #28a745; }
+  .impact-card.blue .impact-value { color: #1e62d0; }
+  .impact-card.orange .impact-value { color: #e06c10; }
+  .impact-card.purple .impact-value { color: #6f26b5; }
+  
+  .impact-unit {
+    font-size: 14px;
+    font-weight: normal;
+    color: #888;
+  }
+  
+  .impact-badge {
+    align-self: flex-start;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    margin-top: auto;
+  }
+  
+  .impact-card.green .impact-badge { background-color: #d4edda; color: #155724; }
+  .impact-card.blue .impact-badge { background-color: #cce5ff; color: #004085; }
+  .impact-card.orange .impact-badge { background-color: #fce9d7; color: #b74700; }
+  .impact-card.purple .impact-badge { background-color: #e2d9f3; color: #381e72; }

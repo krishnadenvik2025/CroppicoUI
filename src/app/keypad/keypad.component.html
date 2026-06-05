@@ -1,0 +1,33 @@
+<div style="text-align:center; padding-top: 20px;padding-bottom: 20px;z-index: 2000 !important;">
+	<div style="margin: 5px; text-align: center;">
+		<input class="input" value={{value}} />
+	</div>
+
+	<div fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="space-evenly center"
+		style="padding-left: 20px; padding-right: 20px;">
+		<div fxFlex="20" class="number-row" fxLayout="row">
+			<button class="number-button" (click)="keyPress(1)">1</button>
+			<button class="number-button" (click)="keyPress(2)">2</button>
+			<button class="number-button" (click)="keyPress(3)">3</button>
+		</div>
+		<div fxFlex="20" class="number-row">
+			<button class="number-button" (click)="keyPress(4)">4</button>
+			<button class="number-button" (click)="keyPress(5)">5</button>
+			<button class="number-button" (click)="keyPress(6)">6</button>
+		</div>
+		<div fxFlex="20" class="number-row">
+			<button class="number-button" (click)="keyPress(7)">7</button>
+			<button class="number-button" (click)="keyPress(8)">8</button>
+			<button class="number-button" (click)="keyPress(9)">9</button>
+		</div>
+		<div fxFlex="20" class="number-row">
+			<button class="number-button" (click)="keyPress('.')">.</button>
+			<button class="number-button" (click)="keyPress(0)">0</button>
+			<button class="number-button" (click)="keyPress('Clear')">Clear</button>
+		</div>
+		<div fxFlex="20" class="number-row1">
+			<button class="number-button" (click)="keyPress('Done')">Enter</button>
+			<button class="number-button" (click)="keyPress('Cancel')">Cancel</button>
+		</div>
+	</div>
+</div>

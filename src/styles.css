@@ -1,0 +1,102 @@
+/* You can add global styles to this file, and also import other style files */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  margin: 0;
+}
+
+html,
+body {
+  height: 100%;
+  z-index: 0 !important;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+.mat-dialog-container {
+  border-radius: 16px !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1) !important;
+  padding: 0 !important;
+  transition: all .2s ease-in-out;
+  min-width: 23rem !important;
+}
+
+.p-10 {
+  padding: 10px;
+}
+
+.p-r-10 {
+  padding-right: 10px;
+}
+
+.p-5 {
+  padding: 5px;
+}
+
+.t-a-c {
+  text-align: center;
+}
+
+.m-t-12 {
+  margin-top: 12px;
+}
+
+.m-t-20 {
+  margin-top: 20px;
+}
+
+.m-t-25 {
+  margin-top: 25px
+}
+
+.m-t-10 {
+  margin-top: 10px;
+}
+
+.modal.fade,
+.modal-backdrop {
+  z-index: 0 !important;
+}
+
+.cdk-overlay-container {
+  z-index: 0 !important;
+  /* position: initial; */
+  /* height: auto; */
+}
+
+.main-div {
+  height: 225px !important;
+  width: 367px !important;
+}
+
+.bg-success {
+  font-family: Roboto;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: #0dbd16 !important;
+  color: white;
+  margin-top: 15px;
+}
+
+.bg-failed {
+  font-family: Roboto;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: #ea2d3f !important;
+  color: white;
+  margin-top: 15px;
+}
+
+a.bg-success:focus,
+a.bg-success:hover,
+button.bg-success:focus,
+button.bg-success:hover {
+  background-color: #0dbd16 !important;
+}
+
+.mat-tab-group,
+.mat-tab-body-wrapper {
+  height: 100% !important;
+}
