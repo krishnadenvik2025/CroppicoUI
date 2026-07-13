@@ -119,6 +119,8 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
     },100)
       this.intervalId =  setInterval(() => {
       this.getWifiNames();
+      this.getBatchStatus();
+      this.getPreviousBatches();
       // this.light_1_state = !this.light_1_state;
     }, 10000);
   }
@@ -548,15 +550,68 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // --- BATCH SETTINGS METHODS ---
 
+  private formatBatchDate(dateValue: any): any {
+    if (typeof dateValue !== 'string') {
+      return dateValue;
+    }
+
+    return dateValue.split(' ')[0];
+  }
+
+  private formatBatchDay(day: any): string {
+    return String(day || '').padStart(2, '0');
+  }
+
+  private normalizeBatch(batch: any): any {
+    if (!batch) {
+      return { batch: 0 };
+    }
+
+    const startDate = batch['start date'] ?? batch.start_date;
+    const endDate = batch['end date'] ?? batch.end_date;
+
+    return {
+      ...batch,
+      batch: batch.batch ?? (batch.status === 'running' ? 1 : 0),
+      batchid: batch.batchid ?? batch.batch_id,
+      'start date': this.formatBatchDate(startDate),
+      'end date': this.formatBatchDate(endDate),
+      plantType: batch.plantType ?? batch.plant_type,
+      noOfSlotsPlanted: batch.noOfSlotsPlanted ?? batch.slots_planted,
+      slotsHarvested: batch.slotsHarvested ?? batch.slots_harvested,
+      weightPerPlant: batch.weightPerPlant ?? batch.avg_weight
+    };
+  }
+
+  private normalizeBatchList(list: any): any[] {
+    if (Array.isArray(list)) {
+      return list.map((batch) => this.normalizeBatch(batch));
+    }
+
+    if (list && typeof list === 'object') {
+      return Object.keys(list).map((key) => this.normalizeBatch(list[key]));
+    }
+
+    return [];
+  }
+
   async getBatchStatus() {
     try {
+      console.log("Batch API GET /batch: request started");
       let status: any = await new Promise((resolve) => {
         this.http.get<any>(this.url + "/batch").subscribe({
-          next: data => resolve(data),
-          error: () => resolve({ batch: 0 })
+          next: data => {
+            console.log("Batch API GET /batch: response", data);
+            resolve(data);
+          },
+          error: error => {
+            console.log("Batch API GET /batch: error", error);
+            resolve({ batch: 0 });
+          }
         });
       });
-      this.currentBatchStatus = status || { batch: 0 };
+      this.currentBatchStatus = this.normalizeBatch(status);
+      console.log("Batch status normalized", this.currentBatchStatus);
     } catch (e) {
       console.log("Error fetching batch status", e);
     }
@@ -564,19 +619,28 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async getPreviousBatches() {
     try {
+      console.log("Batch API GET /batch/list: request started");
       let list: any = await new Promise((resolve) => {
         this.http.get<any>(this.url + "/batch/list").subscribe({
-          next: data => resolve(data),
-          error: () => resolve([])
+          next: data => {
+            console.log("Batch API GET /batch/list: response", data);
+            resolve(data);
+          },
+          error: error => {
+            console.log("Batch API GET /batch/list: error", error);
+            resolve([]);
+          }
         });
       });
-      this.previousBatchesList = (list || []).reverse(); 
+      this.previousBatchesList = this.normalizeBatchList(list).reverse(); 
+      console.log("Previous batches normalized", this.previousBatchesList);
     } catch (e) {
       console.log("Error fetching previous batches", e);
     }
   }
 
   showCreateBatch() {
+    console.log("Batch UI: show create batch form");
     this.batchFormData = {
       // batchid: '',
       plantType: this.plantTypes[0],
@@ -587,6 +651,7 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async showEditBatch() {
+    console.log("Batch UI: show edit batch form", this.currentBatchStatus);
     this.batchFormData = {
       plantType: this.plantTypes[0],
       day: this.days[0],
@@ -598,20 +663,29 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
     
     if (this.currentBatchStatus && this.currentBatchStatus.batchid) {
       try {
+        console.log("Batch API GET /batch/" + this.currentBatchStatus.batchid + "/details: request started");
         let details: any = await new Promise((resolve) => {
           this.http.get<any>(this.url + "/batch/" + this.currentBatchStatus.batchid + "/details").subscribe({
-            next: data => resolve(data),
-            error: () => resolve(null)
+            next: data => {
+              console.log("Batch API GET /batch/" + this.currentBatchStatus.batchid + "/details: response", data);
+              resolve(data);
+            },
+            error: error => {
+              console.log("Batch API GET /batch/" + this.currentBatchStatus.batchid + "/details: error", error);
+              resolve(null);
+            }
           });
         });
         if (details) {
           this.batchFormData = { ...this.batchFormData, ...details };
+          console.log("Batch edit form populated", this.batchFormData);
         }
       } catch(e) { }
     }
   }
 
   showEndBatch() {
+    console.log("Batch UI: show end batch form", this.currentBatchStatus);
     this.batchFormData = {
       slotsHarvested: '',
       weightPerPlant: ''
@@ -620,37 +694,65 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   backToBatchDefault() {
+    console.log("Batch UI: back to default view");
     this.uiBatchMode = 'default';
   }
 
   async createBatch() {
-    if (!this.batchFormData.batchid) {
-      // Just a check to prevent empty submit
-      return;
-    }
-    await this.httpPost("batch/" + this.batchFormData.batchid + "/create", this.batchFormData);
+    console.log("Batch operation: create started", this.batchFormData);
+    const dataToPost = {
+      ...this.batchFormData,
+      day: this.formatBatchDay(this.batchFormData.day)
+    };
+    await this.httpPost("batch/create", dataToPost);
     await this.getBatchStatus();
+    await this.getPreviousBatches();
+    console.log("Batch operation: create completed");
     this.backToBatchDefault();
   }
 
   async saveEditBatch() {
     if (this.currentBatchStatus && this.currentBatchStatus.batchid) {
+      const formattedDay = this.formatBatchDay(this.batchFormData.day);
       const dataToPost = {
         ...this.batchFormData,
-        startDate: `${this.batchFormData.day} ${this.batchFormData.month} ${this.batchFormData.year}`
+        day: formattedDay,
+        startDate: `${formattedDay} ${this.batchFormData.month} ${this.batchFormData.year}`
       };
-      await this.httpPost("batch/" + this.currentBatchStatus.batchid + "/edit", dataToPost);
+      console.log("Batch operation: edit started", this.currentBatchStatus.batchid, dataToPost);
+      await this.httpPost("batch/edit/" + this.currentBatchStatus.batchid, dataToPost);
       await this.getBatchStatus();
+      await this.getPreviousBatches();
+      console.log("Batch operation: edit completed", this.currentBatchStatus.batchid);
       this.backToBatchDefault();
     }
   }
 
   async endBatch() {
     if (this.currentBatchStatus && this.currentBatchStatus.batchid) {
-      await this.httpPost("batch/" + this.currentBatchStatus.batchid + "/end", this.batchFormData);
+      console.log("Batch operation: end started", this.currentBatchStatus.batchid, this.batchFormData);
+      await this.httpPost("batch/end/" + this.currentBatchStatus.batchid, this.batchFormData);
       await this.getBatchStatus();
       await this.getPreviousBatches();
+      console.log("Batch operation: end completed", this.currentBatchStatus.batchid);
       this.backToBatchDefault();
+    }
+  }
+
+  async deleteBatch(batch: any) {
+    if (batch && batch.batchid) {
+      console.log("Batch operation: delete requested", batch);
+      const shouldDelete = window.confirm("Are you sure you want to delete batch " + batch.batchid + "?");
+      if (!shouldDelete) {
+        console.log("Batch operation: delete cancelled", batch.batchid);
+        return;
+      }
+
+      console.log("Batch operation: delete started", batch.batchid);
+      await this.httpPost("batch/delete/" + batch.batchid, {});
+      await this.getBatchStatus();
+      await this.getPreviousBatches();
+      console.log("Batch operation: delete completed", batch.batchid);
     }
   }
 }

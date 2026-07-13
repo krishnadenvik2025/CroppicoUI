@@ -340,28 +340,28 @@
           <div class="impact-title">Total Harvest</div>
           <div class="impact-subtitle">[Calculated Yield kg]</div>
         </div>
-        <div class="impact-value">10 <span class="impact-unit">kg</span></div>
+        <div class="impact-value">{{ envData?.total_harvest || 0 }} <span class="impact-unit">kg</span></div>
       </div>
       <div class="impact-card blue">
         <div class="impact-header">
           <div class="impact-title">Water Stewardship</div>
           <div class="impact-subtitle">[Water Saved Liters]</div>
         </div>
-        <div class="impact-value">13 <span class="impact-unit">Litre</span></div>
+        <div class="impact-value">{{ envData?.water_saved || 0 }} <span class="impact-unit">Litre</span></div>
       </div>
       <div class="impact-card orange">
         <div class="impact-header">
           <div class="impact-title">Waste Reduction</div>
           <div class="impact-subtitle">[Plastic Bags Diverted]</div>
         </div>
-        <div class="impact-value">3.4 <span class="impact-unit">kg</span></div>
+        <div class="impact-value">{{ envData?.plastic_waste || 0 }} <span class="impact-unit">kg</span></div>
       </div>
       <div class="impact-card purple">
         <div class="impact-header">
           <div class="impact-title">Decarbonisation</div>
           <div class="impact-subtitle">[Food Miles Avoided km] </div>
         </div>
-        <div class="impact-value">189 <span class="impact-unit">km</span></div>
+        <div class="impact-value">{{ envData?.food_miles || 0 }} <span class="impact-unit">km</span></div>
       </div>
     </div>
     <!-- <div class="screen-footer">

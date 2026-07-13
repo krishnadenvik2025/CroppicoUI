@@ -42,6 +42,24 @@ try:
 except Exception as e:
     print(f"Failed to initialize SEN66 sensor: {e}")
 
+def calculate_aqi(pm25):
+    breakpoints = [
+        (0.0, 12.0, 0, 50),
+        (12.1, 35.4, 51, 100),
+        (35.5, 55.4, 101, 150),
+        (55.5, 150.4, 151, 200),
+        (150.5, 250.4, 201, 300),
+        (250.5, 350.4, 301, 400),
+        (350.5, 500.4, 401, 500),
+    ]
+
+    for Clow, Chigh, Ilow, Ihigh in breakpoints:
+        if Clow <= pm25 <= Chigh:
+            aqi = ((Ihigh - Ilow) / (Chigh - Clow)) * (pm25 - Clow) + Ilow
+            return round(aqi)
+
+    return 500
+
 #for OAQ
 API_KEY = '9f6287775e5e7cbc01e8281c41f81354'
 cords = {'lat':12.93693, 'lon':80.23578}
@@ -493,18 +511,10 @@ def read_sen66():
         return jsonify({"error": "Sensor not initialized"}), 500
 
     try:
-        (
-            mass_concentration_pm1p0,
-            mass_concentration_pm2p5,
-            mass_concentration_pm4p0,
-            mass_concentration_pm10p0,
-            humidity,
-            temperature,
-            voc_index,
-            nox_index,
-            co2,
+        (mass_concentration_pm1p0, mass_concentration_pm2p5, mass_concentration_pm4p0,
+         mass_concentration_pm10p0, humidity, temperature, voc_index, nox_index, co2,
         ) = sensor.read_measured_values()
-
+        aqi = calculate_aqi(mass_concentration_pm2p5.value)
         sen_data = {
             "pm1.0": mass_concentration_pm1p0.value,
             "pm2p5": mass_concentration_pm2p5.value,
@@ -515,6 +525,7 @@ def read_sen66():
             "voc": voc_index.value,
             "nox": nox_index.value,
             "co2": co2.value,
+            "aqi": aqi
         }
         return jsonify(sen_data)
 

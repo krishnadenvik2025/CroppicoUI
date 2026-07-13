@@ -40,7 +40,8 @@ class SlaveController(Thread):
         super(SlaveController, self).__init__()
         self.device_id = device_id
         self.__run_controller = False
-        self.__ser = Serial('/dev/serial0', 115200, timeout=2.0, parity=PARITY_NONE)
+        self.__ser = Serial('/dev/ttyUSB0', 9600, timeout=2.0, parity=PARITY_NONE)
+        #self.__ser = Serial('/dev/serial0', 115200, timeout=2.0, parity=PARITY_NONE)
         self.__slave_requests = Requests()
         self.connectionHandler = ConnectionHandler(self.device_id)
         self.messages = Message()
@@ -1053,3 +1054,35 @@ class SlaveController(Thread):
             # True
             # >> > datetime.time(21, 0, 0) > datetime.time(now().hour, now().minute, now().second) > datetime.time(7, 0,
             #  
+
+    def readSEN66(self):
+            global sensor
+            try:
+                (pm1p0, pm2p5, pm4p0, pm10p0,
+                humidity, temperature, voc_index, nox_index, co2
+                ) = sensor.read_measured_values()
+                
+                breakpoints = [(0.0, 12.0, 0, 50),(12.1, 35.4, 51, 100),(35.5, 55.4, 101, 150),(55.5, 150.4, 151, 200),(150.5, 250.4, 201, 300),(250.5, 350.4, 301, 400),(350.5, 500.4, 401, 500),]
+
+                for Clow, Chigh, Ilow, Ihigh in breakpoints:
+                    if Clow <= pm2p5.value <= Chigh:
+                        aqi = ((Ihigh - Ilow) / (Chigh - Clow)) * (pm2p5.value - Clow) + Ilow
+                        aqi = round(aqi)
+
+                conn = sqlite3.connect("/home/pi/croppico-api-new/sensor_data.db")
+                conn.execute(
+                    'INSERT INTO aqi (pm2_5, temp, hump, co2, aqi) VALUES (?,?,?,?,?)',
+                    (pm2p5.value, temperature.value, humidity.value, co2.value, aqi)
+                )
+                conn.execute(''' DELETE FROM aqi WHERE id NOT IN (
+                        SELECT id FROM aqi ORDER BY id DESC LIMIT ?)''', (20,))
+                conn.commit()
+                conn.close()
+
+                print(f"[SEN66] pm2.5={pm2p5.value} temp={temperature.value} "
+                    f"hum={humidity.value} co2={co2.value} aqi={aqi}")
+
+            except sqlite3.Error as e:
+                print(f"[SEN66] DB error: {e}")
+            except Exception as e:
+                print(f"[SEN66] Sensor read error: {type(e).__name__} – {e}")

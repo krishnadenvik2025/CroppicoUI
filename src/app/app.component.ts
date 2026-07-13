@@ -1,22 +1,8 @@
-import {
-  Options
-} from '@angular-slider/ngx-slider';
-import {
-  Component,
-  ComponentFactoryResolver,
-  OnChanges,
-  OnInit,
-} from '@angular/core';
-import {
-  Apex
-} from './chartinfo';
-
-import {
-  HttpClient
-} from '@angular/common/http';
-import {
-  environment
-} from 'src/environments/environment';
+import {Options} from '@angular-slider/ngx-slider';
+import {Component,ComponentFactoryResolver,OnChanges,OnInit,} from '@angular/core';
+import {Apex} from './chartinfo';
+import {HttpClient} from '@angular/common/http';
+import {environment} from 'src/environments/environment';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { APIS } from 'src/shared/model/api.model';
 import { AuthComponent } from 'src/shared/component/auth/auth.component';
@@ -26,7 +12,6 @@ import { GuideComponent } from 'src/shared/component/guide/guide.component';
 import { fromEvent } from 'rxjs';
 import { TopupDialogComponent } from 'src/shared/component/topup-dialog/topup-dialog.component';
 import { ScreenSaverService } from 'src/core/screen-saver.service';
-
 
 @Component({
   selector: 'app-root',
@@ -50,6 +35,30 @@ export class AppComponent implements OnInit, OnChanges {
   show_info_screen: boolean = false;
   prevent_toggle: boolean = false;
   allData: any;
+  envData: any = {
+    total_harvest: 0,
+    plastic_waste: 0,
+    water_saved: 0,
+    food_miles: 0
+  };
+  currentFooterIndex: number = 0;
+  footerInterval: any;
+  footerVisible = true;
+  footerMessages: any = {
+    1: [
+      "Homie's 72 plants are actively absorbing CO₂ and releasing fresh oxygen.",
+      "Your indoor garden is improving air quality every day.",
+      "Plants naturally help regulate humidity levels.",
+      "Green spaces contribute to a healthier workspace.",
+      "Indoor plants can help reduce stress and improve wellbeing."
+    ],
+    2: [
+      "Aligning your workspace with UN Sustainable Development Goals 2, 12, and 13.",
+      "Supporting sustainable consumption and production practices.",
+      "Reducing environmental impact through smart monitoring.",
+      "Creating awareness about indoor environmental quality.",
+      "Building healthier and greener workplaces."
+    ]};
   brightness_level: number = 5;
   light_last_updated: number = 0;
   disable_brightness_slider: boolean = false;
@@ -95,7 +104,6 @@ export class AppComponent implements OnInit, OnChanges {
     private dialog: MatDialog,
     private screensaver: ScreenSaverService) {
     this.screen_saver_img = this.image_urls[0];
-
   }
 
   ngOnInit() {
@@ -103,10 +111,10 @@ export class AppComponent implements OnInit, OnChanges {
       console.log(res);
       this.screenSaverStatus = res;
     })
-
     this.getSettings();
-
+    this.startFooterRotation();
     this.getData();
+    this.getEnvData();
     setInterval(() => {
       this.time = new Date();
       // this.light_1_state = !this.light_1_state;
@@ -114,6 +122,7 @@ export class AppComponent implements OnInit, OnChanges {
     setInterval(() => {
       if (!this.show_settings_screen && !this.show_maintenance_screen) {
         this.getData();
+        this.getEnvData();
       }
     }, 5000);
   }
@@ -182,6 +191,51 @@ export class AppComponent implements OnInit, OnChanges {
     } else {
       console.log("Data Api error");
     }
+  }
+
+  async getEnvData() {
+    let envApiCallData: any = await new Promise((resolve) => {
+      this.http
+        .get<any>(this.url + "/env/data").subscribe({
+          next: data => {
+            console.log("GET ENV DATA", data);
+            resolve(data);
+          },
+          error: error => {
+            console.log("Env Data Api error", error);
+            resolve(false);
+          }
+        });
+    });
+
+    if (envApiCallData) {
+      this.envData = {
+        total_harvest: envApiCallData.total_harvest || 0,
+        plastic_waste: envApiCallData.plastic_waste || 0,
+        water_saved: envApiCallData.water_saved || 0,
+        food_miles: envApiCallData.food_miles || 0
+      };
+    }
+  }
+
+  startFooterRotation() {
+    this.footerInterval = setInterval(() => {
+      this.footerVisible = false;
+
+      setTimeout(() => {
+
+        const messages =
+          this.footerMessages[this.currentMainScreen] || [];
+
+        if (messages.length) {
+          this.currentFooterIndex =
+            (this.currentFooterIndex + 1) % messages.length;
+        }
+        this.footerVisible = true;
+
+      }, 500);
+
+    }, 10000);
   }
 
   setWifiSignalImgFn = () => {
@@ -267,9 +321,8 @@ export class AppComponent implements OnInit, OnChanges {
 
       console.log(result);
     });
-
-
   }
+
   async showCharts() {
     const config: MatDialogConfig = {
       panelClass: "dialog-responsive",
@@ -282,16 +335,12 @@ export class AppComponent implements OnInit, OnChanges {
       },
     };
     this.screensaver.updateScreenSaverStatus(false)
-
     const dialog = this.dialog.open(ChartsComponent, config);
     dialog.afterClosed().subscribe((result) => {
       this.screensaver.updateScreenSaverStatus(true)
 
       console.log(result);
     });
-
-
-
   }
 
   async showGuide() {
@@ -306,16 +355,11 @@ export class AppComponent implements OnInit, OnChanges {
       },
     };
     this.screensaver.updateScreenSaverStatus(false)
-
     const dialog = this.dialog.open(GuideComponent, config);
     dialog.afterClosed().subscribe((result) => {
       this.screensaver.updateScreenSaverStatus(true)
-
       console.log(result);
     });
-
-
-
   }
 
   // updateStats(data: any) {
@@ -343,21 +387,13 @@ export class AppComponent implements OnInit, OnChanges {
       'water': [data["water_level"], data["water_flow"], data["water_temperature"]],
       'ambient': [data["ambient_humid"], data["ambient_temp"]]
     };
-    // for (let lS in data["light_stat"]) {
-    //   this.light_state[parseInt(lS) + 1] = Boolean(data["light_stat"][lS]);
-    // }
-    // this.light_last_updated = Math.floor(Date.now() / 1000);
-
     if (this.light_last_updated + 60 < Math.floor(Date.now() / 1000)) {
       for (let lS in data["light_stat"]) {
         this.light_state[parseInt(lS) + 1] = Boolean(data["light_stat"][lS])
       }
       this.light_last_updated = Math.floor(Date.now() / 1000);
     }
-
-
   }
-
 
   showInfo() {
     this.show_info_screen = !this.show_info_screen;
@@ -373,12 +409,6 @@ export class AppComponent implements OnInit, OnChanges {
     this.show_brightness_slider = !this.show_brightness_slider;
   }
   openSettings() {
-    //CALIBRATION POP UP
-    // this.show_settings_screen = !this.show_settings_screen;
-    // this.show_maintenance_screen = false;
-    // this.show_info_screen = false;
-    // this.show_sensors_screen = false;
-    // this.isShowResetAlarm = false
     if (!this.show_settings_screen) {
       const config: MatDialogConfig = {
         panelClass: "dialog-responsive",
@@ -505,8 +535,8 @@ export class AppComponent implements OnInit, OnChanges {
     };
   }
 
-  countdown: string = ''; // Variable to display the countdown timer
-  timerInterval: any; // Variable to store the interval reference
+  countdown: string = ''; 
+  timerInterval: any; 
 
   startCountdown(minutes: number) {
     // Convert minutes to milliseconds
@@ -567,13 +597,16 @@ export class AppComponent implements OnInit, OnChanges {
         }
       });
     });
-
+  }
+  get currentFooterText(): string {
+    return (
+      this.footerMessages[this.currentMainScreen]?.[
+        this.currentFooterIndex
+      ] || ''
+    );
   }
 
   onInteraction(i: any) {
-    // console.log("OnInteractionFn",i)
-    // Is idle and interacting, emit Wake
-    // console.log("Entering onInteraction")
     if (this.isIdle) {
       this.isIdle = false;
       this.showScreenSaver = false;
@@ -581,10 +614,8 @@ export class AppComponent implements OnInit, OnChanges {
       clearInterval(this.clearScreenSaverInterval);
     }
 
-    // User interaction, reset start-idle-timer
     clearTimeout(this.countDown);
     this.countDown = setTimeout(() => {
-      // Countdown done without interaction - emit Idle
       this.isIdle = true;
       this.showScreenSaver = true && this.screenSaverStatus;
       console.log("this.showScreenSaver", this.showScreenSaver)
@@ -609,7 +640,6 @@ export class AppComponent implements OnInit, OnChanges {
   }
 
   screenSaverFn(i: any) {
-    // Setup events
     console.log("screeeennnn----->", i)
     this.screenSaverStatus = true;
     this.onInteraction(1);

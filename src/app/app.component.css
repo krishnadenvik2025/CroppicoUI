@@ -226,3 +226,15 @@ img.update {
   background-position: center;
   transition: background-image 0.5s ease-in-out;
 }
+.footer-message {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
+}
+
+.footer-message.hidden {
+  opacity: 0;
+  transform: translateY(12px);
+}

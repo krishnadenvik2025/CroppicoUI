@@ -289,7 +289,7 @@
             <span>Master Version : </span> {{versionData?.master}}
           </div>
           <div class="field">
-            <span>GUI Version : </span> 2.01
+            <span>GUI Version : </span> 3.0
           </div>
           <div class="field">
             <span>Local IP : </span> {{versionData?.local_ip}}
@@ -430,10 +430,11 @@
                   
                   <div *ngIf="currentBatchStatus?.batch === 1">
                     <p style="font-size: 12px; margin: 5px 0;"><strong>Batch ID:</strong> {{ currentBatchStatus?.batchid }}</p>
-                    <p style="font-size: 12px; margin: 5px 0;"><strong>Start Date:</strong> {{ currentBatchStatus?.['start date'] }}</p>
+                    <p style="font-size: 12px; margin: 5px 0;"><strong>Start Date:</strong> {{ currentBatchStatus?.['start_date'] }}</p>
+                    <p style="font-size: 12px; margin: 5px 0;"><strong>Plant Type:</strong> {{ currentBatchStatus?.['plant_type'] }}</p>
                     <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
-                      <button mat-raised-button color="primary" style="line-height: 24px;" (click)="showEditBatch()">Edit Details</button>
-                      <button mat-raised-button class="bg-failed" style="color: white; line-height: 24px;" (click)="showEndBatch()">End</button>
+                      <button mat-raised-button class="bg-success" style="line-height: 24px;" (click)="showEditBatch()">Edit Details</button>
+                      <button mat-raised-button class="bg-failed" style="color: white; line-height: 24px;" (click)="showEndBatch()">End Batch</button>
                     </div>
                   </div>
                 </mat-card>
@@ -450,17 +451,27 @@
                     </div> -->
                     <div class="field" style="width: 100%; justify-content: space-between; margin-bottom: 0;">
                       Plant Type
-                      <select name="plantType" [(ngModel)]="batchFormData.plantType" style="padding: 2px; width: 150px; height: 24px;">
+                      <select name="plantType" [(ngModel)]="batchFormData.plant_type" style="padding: 2px; width: 150px; height: 24px;">
                         <option *ngFor="let typ of plantTypes" [value]="typ">{{ typ }}</option>
                       </select>
                     </div>
                     <div class="field" style="width: 100%; justify-content: space-between; margin-bottom: 0;">
                       Start Date 
-                      <input type="text" name="startDate" [(ngModel)]="batchFormData.startDate" placeholder="DD/MM/YYYY" style="height: 20px; width: 150px; padding: 2px;">
+                      <div style="display: flex; gap: 5px; width: 180px;">
+                        <select name="day" [(ngModel)]="batchFormData.day" style="padding: 2px; flex: 1; height: 24px;">
+                          <option *ngFor="let d of days" [value]="d">{{ d }}</option>
+                        </select>
+                        <select name="month" [(ngModel)]="batchFormData.month" style="padding: 2px; flex: 1; height: 24px;">
+                          <option *ngFor="let m of months" [value]="m">{{ m }}</option>
+                        </select>
+                        <select name="year" [(ngModel)]="batchFormData.year" style="padding: 2px; flex: 1; height: 24px;">
+                          <option *ngFor="let y of years" [value]="y">{{ y }}</option>
+                        </select>
+                      </div>
                     </div>
                     <div class="field" style="width: 100%; justify-content: space-between; margin-bottom: 0;">
                       No. of Slots Planted 
-                      <input type="number" name="noOfSlotsPlanted" [(ngModel)]="batchFormData.noOfSlotsPlanted" (click)="open(createBatchForm, 'noOfSlotsPlanted')" style="height: 20px; width: 150px; padding: 2px;">
+                      <input type="number" name="noOfSlotsPlanted" [(ngModel)]="batchFormData.slots_planted" (click)="open(createBatchForm, 'noOfSlotsPlanted')" style="height: 20px; width: 150px; padding: 2px;">
                     </div>
                     <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: center;">
                       <button mat-raised-button class="bg-success" style="color: white; line-height: 22px; height: 28px;" (click)="createBatch()">Start Batch</button>
@@ -477,7 +488,7 @@
                   <form #editBatchForm="ngForm" style="display: flex; flex-direction: column; gap: 2px; margin-top: 2px; font-size: 13px;">
                     <div class="field" style="width: 100%; justify-content: space-between; margin-bottom: 0;">
                       Plant Type
-                      <select name="plantType" [(ngModel)]="batchFormData.plantType" style="padding: 2px; width: 180px; height: 24px;">
+                      <select name="plantType" [(ngModel)]="batchFormData.plant_type" style="padding: 2px; width: 180px; height: 24px;">
                         <option *ngFor="let typ of plantTypes" [value]="typ">{{ typ }}</option>
                       </select>
                     </div>
@@ -497,10 +508,10 @@
                     </div>
                     <div class="field" style="width: 100%; justify-content: space-between; margin-bottom: 0;">
                       No. of Slots Planted 
-                      <input type="number" name="noOfSlotsPlanted" [(ngModel)]="batchFormData.noOfSlotsPlanted" (click)="open(editBatchForm, 'noOfSlotsPlanted')" style="width: 180px; height: 20px; padding: 2px;">
+                      <input type="number" name="noOfSlotsPlanted" [(ngModel)]="batchFormData.slots_planted" (click)="open(editBatchForm, 'noOfSlotsPlanted')" style="width: 180px; height: 20px; padding: 2px;">
                     </div>
                     <div style="margin-top: 5px; display: flex; gap: 10px; justify-content: center;">
-                      <button mat-raised-button color="primary" style="line-height: 22px; height: 28px;" (click)="saveEditBatch()">Save</button>
+                      <button mat-raised-button class="bg-success" style="line-height: 22px; height: 28px;" (click)="saveEditBatch()">Save</button>
                       <button mat-raised-button class="bg-failed" style="color: white; line-height: 22px; height: 28px;" (click)="backToBatchDefault()">Back</button>
                     </div>
                   </form>
@@ -514,14 +525,14 @@
                   <form #endBatchForm="ngForm" style="display: flex; flex-direction: column; gap: 2px; margin-top: 2px; font-size: 13px;">
                     <div class="field" style="width: 100%; justify-content: space-between; margin-bottom: 0;">
                       Slots Harvested 
-                      <input type="number" name="slotsHarvested" [(ngModel)]="batchFormData.slotsHarvested" (click)="open(endBatchForm, 'slotsHarvested')" style="height: 20px; width: 150px; padding: 2px;">
+                      <input type="number" name="slotsHarvested" [(ngModel)]="batchFormData.slots_harvested" (click)="open(endBatchForm, 'slotsHarvested')" style="height: 20px; width: 150px; padding: 2px;">
                     </div>
                     <div class="field" style="width: 100%; justify-content: space-between; margin-bottom: 0;">
                       Weight / Plant (g)
-                      <input type="number" name="weightPerPlant" [(ngModel)]="batchFormData.weightPerPlant" (click)="open(endBatchForm, 'weightPerPlant')" style="height: 20px; width: 150px; padding: 2px;">
+                      <input type="number" name="weightPerPlant" [(ngModel)]="batchFormData.avg_weight" (click)="open(endBatchForm, 'weightPerPlant')" style="height: 20px; width: 150px; padding: 2px;">
                     </div>
                     <div style="margin-top: 5px; display: flex; gap: 10px; justify-content: center;">
-                      <button mat-raised-button color="warn" style="line-height: 22px; height: 28px;" (click)="endBatch()">End Batch</button>
+                      <button mat-raised-button class="bg-warning" style="line-height: 22px; height: 28px;" (click)="endBatch()">End Batch</button>
                       <button mat-raised-button class="bg-failed" style="color: white; line-height: 22px; height: 28px;" (click)="backToBatchDefault()">Cancel</button>
                     </div>
                   </form>
@@ -541,17 +552,23 @@
                     <tr style="border-bottom: 2px solid #ccc; text-align: center;">
                       <th style="padding: 5px;">Batch ID</th>
                       <th style="padding: 5px;">Start Date</th>
+                      <th style="padding: 5px;">Plant Type</th>
                       <th style="padding: 5px;">End Date</th>
+                      <th style="padding: 5px; width: 70px;">Delete</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr *ngFor="let batch of previousBatchesList" style="border-bottom: 1px solid #eee;">
                       <td style="padding: 5px;">{{ batch?.batchid }}</td>
                       <td style="padding: 5px;">{{ batch?.['start date'] }}</td>
+                      <td style="padding: 5px;">{{ batch?.['plant_type'] }}</td>
                       <td style="padding: 5px;">{{ batch?.['end date'] }}</td>
+                      <td style="padding: 5px; text-align: center;">
+                        <button mat-raised-button class="bg-failed" style="color: white; min-width: 52px; height: 24px; line-height: 20px; padding: 0 8px; font-size: 11px;" (click)="deleteBatch(batch)">Delete</button>
+                      </td>
                     </tr>
                     <tr *ngIf="!previousBatchesList || previousBatchesList.length === 0">
-                      <td colspan="3" style="text-align: center; padding: 10px;">No batches found.</td>
+                      <td colspan="5" style="text-align: center; padding: 10px;">No batches found.</td>
                     </tr>
                   </tbody>
                 </table>

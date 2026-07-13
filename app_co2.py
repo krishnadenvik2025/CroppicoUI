@@ -6,10 +6,11 @@ import baselogger, os
 import wifimanage as wfm
 import subprocess, re, sqlite3, json, socket
 from datetime import datetime, timedelta
-import time
-import board
-import busio
-import adafruit_scd4x
+import argparse
+from sensirion_i2c_driver import LinuxI2cTransceiver, I2cConnection, CrcCalculator
+from sensirion_driver_adapters.i2c_adapter.i2c_channel import I2cChannel
+from sensirion_i2c_sen66.device import Sen66Device
+import time, requests
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 160 * 1024 * 1024
@@ -17,6 +18,76 @@ CORS(app)
 device_id = constants.getserial()
 slave = SlaveController(device_id)
 master_version = 1.99
+
+# For Sen66
+parser = argparse.ArgumentParser()
+parser.add_argument('--i2c-port', '-p', default='/dev/i2c-1')
+args = parser.parse_args()
+
+no_month = {"Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04", "May": "05", "Jun": "06",
+                "Jul": "07", "Aug": "08", "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12"}
+db_path = "/home/pi/croppico-api-new/sensor_data.db"
+km = {'Basil': 200, 'Lettuce': 150, 'Tomato': 100, 'Strawberry': 50 }
+# Keep these alive at module level
+i2c_transceiver = None
+sensor = None
+
+#for OAQ
+API_KEY = '9f6287775e5e7cbc01e8281c41f81354'
+cords = {'lat':12.93693, 'lon':80.23578}
+BASE_URL = 'https://api.openweathermap.org/data/2.5/air_pollution'
+
+try:
+    i2c_transceiver = LinuxI2cTransceiver(args.i2c_port)
+    channel = I2cChannel(
+        I2cConnection(i2c_transceiver),
+        slave_address=0x6B,
+        crc=CrcCalculator(8, 0x31, 0xff, 0x0)
+    )
+    sensor = Sen66Device(channel)
+    sensor.device_reset()
+    time.sleep(1)
+    sensor.start_continuous_measurement()
+except Exception as e:
+    print(f"Failed to initialize SEN66 sensor: {e}")
+
+def calculate_aqi(pm25):
+    breakpoints = [
+        (0.0, 12.0, 0, 50),
+        (12.1, 35.4, 51, 100),
+        (35.5, 55.4, 101, 150),
+        (55.5, 150.4, 151, 200),
+        (150.5, 250.4, 201, 300),
+        (250.5, 350.4, 301, 400),
+        (350.5, 500.4, 401, 500),
+    ]
+
+    for Clow, Chigh, Ilow, Ihigh in breakpoints:
+        if Clow <= pm25 <= Chigh:
+            aqi = ((Ihigh - Ilow) / (Chigh - Clow)) * (pm25 - Clow) + Ilow
+            return round(aqi)
+
+    return 500
+
+#for OAQ
+def generate_batchid(data):
+    plant_type = data.get("plant_type", "").strip()
+    plant_prefix = plant_type[:2].upper()
+    year_suffix = datetime.now().strftime("%y")
+    batch_prefix = f"{plant_prefix}{year_suffix}"
+
+    conn = get_db_connection()
+
+    last_batch = conn.execute("""SELECT batch_id FROM batch WHERE batch_id LIKE ? ORDER BY batch_id DESC LIMIT 1""", (f"{batch_prefix}%",)).fetchone()
+
+    if last_batch:
+        last_number = int(last_batch["batch_id"][-2:])
+        new_number = last_number + 1
+    else:
+        new_number = 1
+
+    batch_id = f"{batch_prefix}{new_number:02d}"
+    return batch_id
 
 '''sample = {
     "data": {
@@ -62,14 +133,9 @@ master_version = 1.99
     }
 }'''
 
-i2c = busio.I2C(board.SCL, board.SDA)
-scd = adafruit_scd4x.SCD4X(i2c)
-scd.start_periodic_measurement()
-
 @app.before_request
 def log_api_call():
     print(f"API called: {request.endpoint}")
-
 
 @app.route('/data', methods=["GET"])
 def data():
@@ -82,16 +148,13 @@ def data():
     return {"data": deviceData, "alarm": alarm}
     # return slave.getSlaveData()
 
-
 @app.route('/notification')
 def notify():
     return 'Hello, World!'
 
-
 @app.route('/warning')
 def warn():
     return 'Hello, World!'
-
 
 @app.route('/lights', methods=["POST"])
 def lights():
@@ -99,13 +162,11 @@ def lights():
     res = slave.setLightStatus(int(data['light']), int(data['state']))
     return {'result': res}
 
-
 @app.route('/getsettings', methods=["GET"])
 def getsettings():
     res = slave.getSettings()
     print(type(res))
     return res
-
 
 @app.route('/historicalData/<start>/<end>', methods=["GET"])
 def getchat(start, end):
@@ -124,7 +185,6 @@ def getchat(start, end):
     print(type(json_output))
     return json_output
 
-
 def get_graph_value(start_timestamp, end_timestamp, column):
     conn = sqlite3.connect('/home/pi/croppico-api-new/sensor_data.db')
     cursor = conn.cursor()
@@ -138,7 +198,6 @@ def get_graph_value(start_timestamp, end_timestamp, column):
     data = [{'x': row[0], 'y': row[1]} for row in results]
     return data
 
-
 @app.route('/getGuideMediaList', methods=["GET"])
 def media():
     demo_pdf_folder = '/var/www/html/assets/media/demo_pdf'
@@ -147,7 +206,6 @@ def media():
     video_files = get_file_list(demo_video_folder, '.mp4')
     result = {'Video': video_files, 'pdf': pdf_files}
     return result
-
 
 def get_file_list(folder_path, file_type):
     file_list = []
@@ -161,7 +219,6 @@ def get_file_list(folder_path, file_type):
             file_list.append({'name': filename, 'url': file_url})
     return file_list
 
-
 @app.route('/system/screen', methods=["POST"])
 def pause_poll():
     params = request.json
@@ -172,7 +229,6 @@ def pause_poll():
     res = slave.poll_pause(str(status))
     return {'result': res}
 
-
 @app.route('/settings/<sType>', methods=["POST"])
 def settings(sType):
     params = request.json
@@ -181,7 +237,6 @@ def settings(sType):
     # return res
     return {'result': res}
     # return {'result': True}
-
 
 @app.route('/settings/9/getsensorcalibration/<aType>', methods=["GET"])
 def sensorCalibration(aType):
@@ -234,19 +289,16 @@ def getresultfrommcu():
     return {'result': res}
     # return True
 
-
 @app.route('/settings/9/putnumberofsolutionsdone', methods=["POST"])
 def totalNumbersDone():
     params = request.json
     res = slave.putnumberofsolution(params)
     return {'result': res}
 
-
 @app.route('/maintenance/state/<state>', methods=["POST"])
 def maintenanceState(state):
     res = slave.setMaintenanceState(eval(state))
     return {'result': res}
-
 
 @app.route('/maintenance/control/<mType>', methods=["POST"])
 def maintenance(mType):
@@ -254,25 +306,21 @@ def maintenance(mType):
     res = slave.setMaintenanceControl(int(mType), state)
     return {'result': res}
 
-
 @app.route('/adhoc/start', methods=["POST"])
 def adhoc():
     cmMsg = request.json
     res = slave.processAdhoc(cmMsg)
     return {'result': res}
 
-
 @app.route('/system/restart', methods=["POST"])
 def restart():
     res = slave.restartController()
     return {'result': res}
 
-
 @app.route('/system/reseterror', methods=["POST"])
 def reset():
     res = slave.resetError()
     return {'result': res}
-
 
 @app.route('/system/flush', methods=["POST"])
 def flush():
@@ -280,13 +328,11 @@ def flush():
     res = slave.flush(state)
     return {'result': res}
 
-
 @app.route('/system/flush/getflushresult', methods=["GET"])
 def flushresult():
     print("get flush result")
     res = slave.getFlushResult()
     return {'result': res}
-
 
 @app.route('/system/topup', methods=["POST"])
 def topup():
@@ -294,25 +340,21 @@ def topup():
     res = slave.topup(state)
     return {'result': res}
 
-
 @app.route('/system/topup/gettopupresult', methods=["GET"])
 def topupresult():
     print("get topup result")
     res = slave.getTopupResult()
     return {'result': res}
 
-
 @app.route('/system/useracknowledgement', methods=["POST"])
 def useracknowledgement():
     res = slave.useracknowledgement()
     return {'result': res}
 
-
 @app.route('/system/model', methods=["POST"])
 def model():
     res = slave.model()
     return {'result': res}
-
 
 @app.route('/system/versioninfo', methods=["GET"])
 def version():
@@ -326,7 +368,6 @@ def version():
     print("home---------------->", res)
     return res
 
-
 def get_local_ip():
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
@@ -335,7 +376,6 @@ def get_local_ip():
         return local_ip
     except Exception:
         return "Not Connected"
-
 
 @app.route('/screensaverdata', methods=["POST"])
 def screensaver():
@@ -349,96 +389,107 @@ def screensaver():
     if str(status) == "False":
         status = 0
     res = slave.screen_saver(interval_time, status)
-    return {'result': res}
+    return {'result': res}     
 
+# @app.route('/system/wifinames', methods=["GET"])
+# def wifinames():
+#     wifi_list = []
+
+#     try:
+#         output = subprocess.check_output(
+#             ["sudo", "iw", "dev", "wlan0", "scan"]
+#         ).decode("utf-8")
+
+#         current_ssid = ""
+#         security = "OPEN"
+
+#         for line in output.split("\n"):
+#             line = line.strip()
+
+#             if line.startswith("capability:"):
+#                 if "Privacy" in line:
+#                     security = "SECURED"
+#                 else:
+#                     security = "OPEN"
+
+#             if line.startswith("SSID:"):
+#                 current_ssid = line.replace("SSID:", "").strip()
+
+#                 if current_ssid != "":
+#                     wifi_list.append({
+#                         "ssid": current_ssid,
+#                         "security": security
+#                     })
+
+#         # Remove duplicates
+#         unique_wifi = {wifi['ssid']: wifi for wifi in wifi_list}
+#         wifi_list = list(unique_wifi.values())
+
+#         # Get currently connected WiFi
+#         try:
+#             cur = subprocess.check_output(
+#                 ["iwgetid", "-r"]
+#             ).decode("utf-8").strip()
+#         except:
+#             cur = ""
+
+#         return {
+#             "res": wifi_list,
+#             "cur": cur
+#         }
+
+#     except Exception as e:
+#         print("WiFi scan error:", e)
+#         return {"res": [], "cur": ""}
 
 @app.route('/system/wifinames', methods=["GET"])
 def wifinames():
-    wifi_list = []
-
+    all = wfm.Search()
     try:
-        output = subprocess.check_output(
-            ["sudo", "iw", "dev", "wlan0", "scan"]
-        ).decode("utf-8")
-
-        current_ssid = ""
-        security = "OPEN"
-
-        for line in output.split("\n"):
-            line = line.strip()
-
-            if line.startswith("capability:"):
-                if "Privacy" in line:
-                    security = "SECURED"
-                else:
-                    security = "OPEN"
-
-            if line.startswith("SSID:"):
-                current_ssid = line.replace("SSID:", "").strip()
-
-                if current_ssid != "":
-                    wifi_list.append({
-                        "ssid": current_ssid,
-                        "security": security
-                    })
-
-        # Remove duplicates
-        unique_wifi = {wifi['ssid']: wifi for wifi in wifi_list}
-        wifi_list = list(unique_wifi.values())
-
-        # Get currently connected WiFi
-        try:
-            cur = subprocess.check_output(
-                ["iwgetid", "-r"]
-            ).decode("utf-8").strip()
-        except:
-            cur = ""
-
-        return {
-            "res": wifi_list,
-            "cur": cur
-        }
-
-    except Exception as e:
-        print("WiFi scan error:", e)
-        return {"res": [], "cur": ""}
-
-
-# @app.route('/system/connectwifi', methods=["POST"])
-# def wificonnect():
-#     try:
-#         creds = request.json
-#         print("sudo", "nodewifi.sh", creds["ssid"], creds["pwd"])
-#         ssid = str(creds["ssid"])
-#         pwd = str(creds["pwd"])
-#         c = subprocess.call(["sudo", "nodewifi.sh", "" + ssid + "", "" + pwd + ""])
-#     except Exception as e:
-#         return {'res': False}
-#     return {'res': True}
+        cur = str(subprocess.check_output(["sudo", "iwgetid"])).split('"')[1]
+        res = {'res': all, 'cur': cur}
+        return res
+    except subprocess.CalledProcessError as e:
+        print(e.output)
+        res = {'res': all}
+        return res
 
 
 @app.route('/system/connectwifi', methods=["POST"])
 def wificonnect():
     try:
         creds = request.json
+        print("sudo", "nodewifi.sh", creds["ssid"], creds["pwd"])
         ssid = str(creds["ssid"])
-        pwd = str(creds.get("pwd", ""))
-
-        print("Connecting to:", ssid, "Password:", pwd)
-
-        if pwd == "":
-            c = subprocess.call(["sudo", "nodewifi.sh", ssid])
-        else:
-            c = subprocess.call(["sudo", "nodewifi.sh", ssid, pwd])
-
-        if c != 0:
-            return {'res': False}
-
+        pwd = str(creds["pwd"])
+        c = subprocess.call(["sudo", "nodewifi.sh", "" + ssid + "", "" + pwd + ""])
     except Exception as e:
-        print("Error:", e)
         return {'res': False}
-
     return {'res': True}
+
+
+# @app.route('/system/connectwifi', methods=["POST"])
+# def wificonnect():
+#     try:
+#         creds = request.json
+#         ssid = str(creds["ssid"])
+#         pwd = str(creds.get("pwd", ""))
+
+#         print("Connecting to:", ssid, "Password:", pwd)
+
+#         if pwd == "":
+#             c = subprocess.call(["sudo", "nodewifi.sh", ssid])
+#         else:
+#             c = subprocess.call(["sudo", "nodewifi.sh", ssid, pwd])
+
+#         if c != 0:
+#             return {'res': False}
+
+#     except Exception as e:
+#         print("Error:", e)
+#         return {'res': False}
+
+#     return {'res': True}
 
 
 def get_wifi_strength(interface='wlan0'):
@@ -464,18 +515,212 @@ def get_wifi_strength(interface='wlan0'):
         return None
 
 @app.route('/sensor/airquality', methods=["GET"])
-def co2_data():
+def read_sen66():
+    if sensor is None:
+        return jsonify({"error": "Sensor not initialized"}), 500
+
     try:
-        if scd.data_ready:
-            return {
-                "co2": scd.CO2,
-                "temp": scd.temperature,
-                "hum": scd.relative_humidity
-            }
-        else:
-            return {"status": "waiting for data"}
+        (mass_concentration_pm1p0, mass_concentration_pm2p5, mass_concentration_pm4p0,
+         mass_concentration_pm10p0, humidity, temperature, voc_index, nox_index, co2,
+        ) = sensor.read_measured_values()
+        aqi = calculate_aqi(mass_concentration_pm2p5.value)
+        sen_data = {
+            "pm1.0": mass_concentration_pm1p0.value,
+            "pm2p5": mass_concentration_pm2p5.value,
+            "pm4.0": mass_concentration_pm4p0.value,
+            "pm10.0": mass_concentration_pm10p0.value,
+            "hum": humidity.value,
+            "temp": temperature.value,
+            "voc": voc_index.value,
+            "nox": nox_index.value,
+            "co2": co2.value,
+            "aqi": aqi
+        }
+        return jsonify(sen_data)
+
     except Exception as e:
-        return {"error": str(e)}
+        print(f"Error reading SEN66: {type(e)} – {e}")
+        return jsonify({"error": "Sensor read failed"}), 500
+
+@app.route('/oaq', methods=["GET"])
+def oaq():
+    try:
+        if os.path.exists("/home/pi/krishna/outdoor_air_quality.json"):
+            with open("/home/pi/krishna/outdoor_air_quality.json", "r") as f:
+                old_data = json.load(f)
+            if old_data["list"][0]["dt"] < int(time.time())-6000:
+                url = f"{BASE_URL}?lat={cords['lat']}&lon={cords['lon']}&appid={API_KEY}"
+                response = requests.get(url) 
+                response.raise_for_status()
+                data = response.json()
+                with open("/home/pi/krishna/outdoor_air_quality.json", "w") as p:
+                    json.dump(data, p)
+        else:
+            url = f"{BASE_URL}?lat={cords['lat']}&lon={cords['lon']}&appid={API_KEY}"
+            response = requests.get(url)
+            response.raise_for_status()
+            data = response.json()
+            with open("/home/pi/krishna/outdoor_air_quality.json", "w") as p:
+                json.dump(data, p)
+        return old_data
+    except Exception as e:
+        print(f"Error reading OAQ: {type(e)} – {e}")
+        return jsonify({"error": "OAQ read failed"}), 500
+
+@app.route('/env/data', methods=['GET'])
+def env_data():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute("""
+            SELECT SUM(total_yeild) as total_harvest, SUM(plastic_avoided) as plastic_waste,
+                SUM(water_saved) as water_saved, SUM(miles_avoided) as food_miles
+            FROM batch
+            WHERE status = 'ended' """)
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        return jsonify({
+            "total_harvest": row["total_harvest"] or 0,
+            "plastic_waste": row["plastic_waste"] or 0,
+            "water_saved": row["water_saved"] or 0,
+            "food_miles": row["food_miles"] or 0
+        })
+
+    except Exception as e:
+        print(f"Error reading env data: {type(e)} – {e}")
+        return jsonify({"error": "Env data read failed"}), 500
+
+@app.route('/env/data/last', methods=['GET'])
+def env_data():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""SELECT total_yeild,plastic_avoided,water_saved,miles_avoided
+            FROM batch WHERE status = 'last-ended' """)
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        return jsonify({
+            "total_harvest": row["total_yeild"] or 0,
+            "plastic_waste": row["plastic_avoided"] or 0,
+            "water_saved": row["water_saved"] or 0,
+            "food_miles": row["miles_avoided"] or 0
+        })
+    except Exception as e:
+        print(f"Error reading env data: {type(e)} – {e}")
+        return jsonify({"error": "Env data read failed"}), 500
+
+def get_db_connection():
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def env_calculation(id, slots_harvested, avg_weight):
+    conn = get_db_connection()
+    conn.execute(""" SELECT plant_type FROM batch WHERE batch_id = ? """, (id,))
+    plant_type = conn.fetchone()
+    yeild_kg = slots_harvested * avg_weight /1000
+    water_saved = yeild_kg * 25 - 80
+    plastic_avoided = yeild_kg * 0.5
+    miles_saved = yeild_kg * km.get(plant_type[0], 0) * 0.02
+    return { "miles_saved": miles_saved, "plastic_avoided": plastic_avoided, "total_yeild": yeild_kg, "water_saved": water_saved}
+
+@app.route("/batch", methods=["GET"])
+def get_running_batch():
+    conn = get_db_connection()
+    batch = conn.execute(""" SELECT * FROM batch WHERE status = 'running' ORDER BY created_time DESC LIMIT 1 """).fetchone()
+    conn.close()
+
+    if batch is None:
+        return jsonify({"message": "No running batch found"})
+
+    return jsonify(dict(batch))
+
+@app.route("/batch/list", methods=["GET"])
+def get_all_batches():
+    conn = get_db_connection()
+    batches = conn.execute("""SELECT * FROM batch WHERE status != 'deleted' AND status != 'running' ORDER BY created_time DESC """).fetchall()
+    conn.close()
+    response = {}
+    for index, batch in enumerate(batches):
+        response[str(index)] = dict(batch)
+
+    return jsonify(response)
+
+@app.route("/batch/create", methods=["POST"])
+def create_batch():
+    data = request.get_json()
+    batch_id = generate_batchid(data)
+    month = no_month.get(data.get("month"), "00")
+    start_date = f"{data.get('day')}-{month}-{data.get('year')}"
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    conn = get_db_connection()
+    conn.execute(""" INSERT INTO batch ( batch_id, created_time, last_updated,
+                  plant_type, slots_planted, avg_weight, start_date, end_date, slots_harvested, 
+                 water_saved, plastic_avoided, total_yeild, miles_avoided, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
+        batch_id, current_time, current_time, data.get("plant_type"),
+        data.get("slots_planted"), 0, start_date, None, 0,
+        0, 0, 0, 0,"running"))
+
+    conn.commit()
+    conn.close()
+    return jsonify({"message": "Batch created successfully","batch_id": batch_id})
+
+@app.route("/batch/edit/<batch_id>", methods=["POST"])
+def edit_batch(batch_id):
+    data = request.get_json()
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    month = data.get("month", "")
+    month = no_month.get(month, "00")
+    start_date = f"{data.get('day')}-{month}-{data.get('year')}"
+    conn = get_db_connection()
+    conn.execute("""UPDATE batch
+        SET plant_type = ?, slots_planted = ?, start_date = ?, last_updated = ?
+        WHERE batch_id = ?""", (
+        data.get("plant_type"), data.get("slots_planted"), start_date,
+        current_time, batch_id ))
+
+    conn.commit()
+    conn.close()
+    return jsonify({"message": "Batch updated successfully"})
+
+@app.route("/batch/delete/<batch_id>", methods=["POST"])
+def delete_batch(batch_id):
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    conn = get_db_connection()
+    conn.execute("""
+        UPDATE batch
+        SET status = 'deleted', last_updated = ?
+        WHERE batch_id = ?""", (
+        current_time, batch_id))
+
+    conn.commit()
+    conn.close()
+    return jsonify({"message": "Batch deleted successfully"})
+
+@app.route("/batch/end/<batch_id>", methods=["POST"])
+def end_batch(batch_id):
+    data = request.get_json()
+    result = env_calculation(batch_id,data.get("slots_harvested"),data.get("avg_weight"))
+    current_time = datetime.now().strftime("%Y-%m-%d")
+    conn = get_db_connection()
+
+    conn.execute("""
+        UPDATE batch
+        SET status = 'ended', end_date = ?, last_updated = ?, water_saved = ?,
+            plastic_avoided = ?, total_yeild = ?, miles_avoided = ?, slots_harvested = ?, avg_weight = ?
+        WHERE batch_id = ?""", (
+        current_time, current_time, result["water_saved"], result["plastic_avoided"],
+        result["total_yeild"], result["miles_saved"],data.get("slots_harvested"),data.get("avg_weight"), batch_id))
+
+    conn.commit()
+    conn.close()
+    return jsonify({"message": "Batch ended successfully"})
 
 if __name__ == '__main__':
     slave.start()

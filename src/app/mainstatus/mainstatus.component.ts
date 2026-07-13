@@ -8,6 +8,7 @@ interface SensorData {
     co2: number;
     pm2p5: number;
     voc: number;
+    aqi: number;
 }
 // import { Apex } from './chartinfo';
 
@@ -20,12 +21,13 @@ interface SensorData {
 export class MainstatusComponent implements OnInit, OnChanges, OnDestroy {
   @Input() meterData: any;
   @Input() allData: any;
+  @Input() envData: any;
   @Output() screenChanged = new EventEmitter<number>();
   
   currentScreen: number = 0;
   totalScreens: number = 3;
   
-  sensorsData: SensorData = { temp: 0, hum: 0, co2: 0, pm2p5: 0, voc: 0 };
+  sensorsData: SensorData = { temp: 0, hum: 0, co2: 0, pm2p5: 0, voc: 0, aqi: 0 };
   private intervalId: any;
 
   constructor(private http: HttpClient) {
@@ -75,19 +77,8 @@ export class MainstatusComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   get aqiValue(): number {
-    const pm25 = this.sensorsData?.pm2p5 || 0;
-    if (pm25 <= 12.0) return this.calcAqi(50, 0, 12.0, 0, pm25);
-    if (pm25 <= 35.4) return this.calcAqi(100, 51, 35.4, 12.1, pm25);
-    if (pm25 <= 55.4) return this.calcAqi(150, 101, 55.4, 35.5, pm25);
-    if (pm25 <= 150.4) return this.calcAqi(200, 151, 150.4, 55.5, pm25);
-    if (pm25 <= 250.4) return this.calcAqi(300, 201, 250.4, 150.5, pm25);
-    if (pm25 <= 350.4) return this.calcAqi(400, 301, 350.4, 250.5, pm25);
-    if (pm25 <= 500.4) return this.calcAqi(500, 401, 500.4, 350.5, pm25);
-    return 500;
-  }
-
-  private calcAqi(Ih: number, Il: number, Bh: number, Bl: number, C: number): number {
-    return Math.round(((Ih - Il) / (Bh - Bl)) * (C - Bl) + Il);
+    const aqi = this.sensorsData?.aqi || 0;
+    return aqi
   }
 
   get aqiData() {

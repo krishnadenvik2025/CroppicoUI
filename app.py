@@ -1,4 +1,3 @@
-
 from flask import Flask, request, send_file
 from flask_cors import CORS
 import constants, jsonify
@@ -7,15 +6,42 @@ import baselogger, os
 import wifimanage as wfm
 import subprocess, re, sqlite3, json, socket
 from datetime import datetime, timedelta
-import bme680
-import time,jsonify
+import argparse, time, requests
+from sensirion_i2c_driver import LinuxI2cTransceiver, I2cConnection, CrcCalculator
+from sensirion_driver_adapters.i2c_adapter.i2c_channel import I2cChannel
+from sensirion_i2c_sen66.device import Sen66Device
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 160 * 1024 * 1024
 CORS(app)
 device_id = constants.getserial()
 slave = SlaveController(device_id)
-master_version = 1.99
+master_version = 2.01
+# For Sen66
+parser = argparse.ArgumentParser()
+parser.add_argument('--i2c-port', '-p', default='/dev/i2c-1')
+args = parser.parse_args()
+i2c_transceiver = None
+sensor = None
+
+try:
+    i2c_transceiver = LinuxI2cTransceiver(args.i2c_port)
+    channel = I2cChannel(
+        I2cConnection(i2c_transceiver),
+        slave_address=0x6B,
+        crc=CrcCalculator(8, 0x31, 0xff, 0x0)
+    )
+    sensor = Sen66Device(channel)
+    sensor.device_reset()
+    time.sleep(1)
+    sensor.start_continuous_measurement()
+except Exception as e:
+    print(f"Failed to initialize SEN66 sensor: {e}")
+    
+#for OAQ
+API_KEY = '9f6287775e5e7cbc01e8281c41f81354'
+cords = {'lat':12.93693, 'lon':80.23578}
+BASE_URL = 'https://api.openweathermap.org/data/2.5/air_pollution'
 
 '''sample = {
     "data": {
@@ -61,65 +87,11 @@ master_version = 1.99
     }
 }'''
 
-sensor = bme680.BME680(0x77)
-
-sensor.set_humidity_oversample(bme680.OS_2X)
-sensor.set_pressure_oversample(bme680.OS_4X)
-sensor.set_temperature_oversample(bme680.OS_8X)
-
-sensor.set_gas_status(bme680.ENABLE_GAS_MEAS)
-sensor.set_gas_heater_temperature(320)
-sensor.set_gas_heater_duration(150)
-sensor.select_gas_heater_profile(0)
-
-gas_readings = []
-baseline_samples = 30
-
-def update_gas_baseline(gas_value):
-    gas_readings.append(gas_value)
-    if len(gas_readings) > baseline_samples:
-        gas_readings.pop(0)
-    return sum(gas_readings) / len(gas_readings)
-
-def read_sensor(timeout_sec=5):
-    timeout = time.time() + timeout_sec
-
-    while not sensor.get_sensor_data():
-        if time.time() > timeout:
-            raise RuntimeError("Sensor read timeout")
-        time.sleep(0.2)
-
-    return (
-        sensor.data.temperature,
-        sensor.data.humidity,
-        sensor.data.gas_resistance
-    )
-
-def calculate_iaq(temp, hum, gas, gas_baseline):
-    HUM_BASELINE = 40.0
-    HUM_WEIGHT = 0.25
-
-    # humidity score
-    hum_offset = hum - HUM_BASELINE
-    if hum_offset > 0:
-        hum_score = (100 - HUM_BASELINE - hum_offset) / (100 - HUM_BASELINE)
-    else:
-        hum_score = (HUM_BASELINE + hum_offset) / HUM_BASELINE
-
-    hum_score *= HUM_WEIGHT * 100
-
-    # gas score
-    gas_ratio = gas / gas_baseline
-    gas_score = min(max(gas_ratio * (100 - HUM_WEIGHT * 100), 0), 100)
-
-    iaq = int(100 - (hum_score + gas_score))
-    iaq = max(0, min(500, iaq))
-
-    return iaq
 
 @app.before_request
 def log_api_call():
     print(f"API called: {request.endpoint}")
+
 
 
 @app.route('/data', methods=["GET"])
@@ -451,29 +423,6 @@ def get_wifi_strength(interface='wlan0'):
     except subprocess.CalledProcessError as e:
         print(f"Error: {e}")
         return None
-
-@app.route('/sensor/airquality', methods=["GET"])
-def airquality():
-    try:
-        temp, hum, gas = read_sensor()
-
-        gas_baseline = update_gas_baseline(gas)
-        iaq = calculate_iaq(temp, hum, gas, gas_baseline)
-
-        return {
-            'temp': round(temp, 2), 
-            'hum': round(hum, 2), 
-            'gas': round(gas, 2), 
-            'iaq': iaq
-        }
-    except Exception as e:
-        print(f"Error: {e}")
-        return {
-            'temp': 0, 
-            'hum': 0, 
-            'gas': 0, 
-            'iaq': 0
-        }
 
 
 if __name__ == '__main__':
