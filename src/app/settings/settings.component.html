@@ -1,5 +1,5 @@
 <div class="setting-space">
- 
+
   <ul ngbNav #nav="ngbNav" [(activeId)]="active" class="nav-tabs" style="justify-content: space-between;"
     (navChange)="settingMenuChange($event)">
 
@@ -58,14 +58,14 @@
           <!-- Supplement Pump -->
           <form #sPSettings="ngForm" style="justify-content: initial; flex: 1;">
             <mat-card-title class="header-bg p-10"
-              style="background-color: transparent; border: none; color: #2565AE; text-align: center;">Supplement Pump</mat-card-title>
+              style="background-color: transparent; border: none; color: #2565AE; text-align: center;">Supplement
+              Pump</mat-card-title>
 
             <div style="display: flex; gap: 5px;">
               <div class="align-column">
                 <div class="space">
                   <span>Check Wait Time :</span>
-                  <input type="number" name='cycle' [(ngModel)]="suppPumpSet.cycle"
-                    (click)="open(sPSettings,'cycle')">
+                  <input type="number" name='cycle' [(ngModel)]="suppPumpSet.cycle" (click)="open(sPSettings,'cycle')">
                 </div>
                 <div class="space">
                   <span>pH Dose Conc. (0.0 - 10.0) :</span>
@@ -223,15 +223,15 @@
       <a ngbNavLink>Supplement Pump</a>
       <ng-template ngbNavContent>
         <form #sPSettings="ngForm"> -->
-          <!-- <div class="field">
+    <!-- <div class="field">
             EC Pump ON Time <input type="number" name='ec' [(ngModel)]="suppPumpSet.ec" (click)="open(sPSettings,'ec')">
           </div> -->
-          <!-- <div class="field">
+    <!-- <div class="field">
             pH Pump ON Time <input type="number" name='phinc' [(ngModel)]="suppPumpSet.phinc"
               (click)="open(sPSettings,'phinc')">
             </div> -->
-          <!-- pH Decrease Pump Time <input type="number" name='phdec' [(ngModel)]="suppPumpSet.phdec" (click)="open(sPSettings,'phdec')"> -->
-          <!-- <div class="field" style="width: 27%;">
+    <!-- pH Decrease Pump Time <input type="number" name='phdec' [(ngModel)]="suppPumpSet.phdec" (click)="open(sPSettings,'phdec')"> -->
+    <!-- <div class="field" style="width: 27%;">
             Supplement check Wait Time <input type="number" name='cycle' [(ngModel)]="suppPumpSet.cycle"
               (click)="open(sPSettings,'cycle')">
           </div>
@@ -298,7 +298,7 @@
       </ng-template>
     </li>
 
-<!-- System -->
+    <!-- System -->
     <li [ngbNavItem]="6">
       <a ngbNavLink>System</a>
       <ng-template ngbNavContent>
@@ -309,13 +309,14 @@
           </div>
           <div class="outlinecontentright">
             <div style="height:180px;width:100%;overflow-y: scroll; padding-left: 50px;">
-              <div type="button" class="wifinames" *ngFor="let wifi of wifinamelist"
-                (click)="handleWifiClick(wifi)">
-                {{wifi.ssid}}
-                <div *ngIf="wifi.ssid==curWifiName">Connected</div>
-                <div *ngIf="wifi.ssid!=curWifiName">
-                  {{ wifi.security === 'OPEN' ? 'Click to connect (Open)' : 'Click to connect' }}
-                </div>
+              <div type="button" class="wifinames" *ngFor="let wifiname of wifinamelist"
+                (click)="handleWifiClick(wifiname)">
+                {{wifiname?.ssid}}
+                <span class="wifi-security-badge" [class.open]="wifiname?.security === 'OPEN'">
+                  {{wifiname?.security === 'OPEN' ? 'Open' : 'Secured'}}
+                </span>
+                <div *ngIf="wifiname?.ssid==curWifiName">Connected</div>
+                <div *ngIf="wifiname?.ssid!=curWifiName">Click to connect</div>
               </div>
             </div>
           </div>
@@ -363,13 +364,12 @@
     </li>
 
     <!-- System setting -->
-
     <li [ngbNavItem]="8">
       <a ngbNavLink>System Setting</a>
       <ng-template ngbNavContent>
 
         <div style="display: flex;justify-content: space-between;">
-          <div style="display: flex;flex-direction: column;gap: 5px;align-items: center;width: 50%;">
+          <div style="display: flex;flex-direction: column;gap: 5px;align-items: center;width: 30%;">
             <mat-card-title class="p-10" style="color: #2565AE;">System Type</mat-card-title>
             <mat-radio-group id="radio-button" [formControl]="systemFormControl">
               <mat-radio-button style="font-weight: 550;font-size: 16px;" value="1.00">Manual</mat-radio-button>
@@ -382,16 +382,18 @@
             </div>
           </div>
 
+          <span class="vertical-line" style="height: 14rem;"></span>
+
           <!-- Screen Saver Setting -->
-          <div style="display: flex;flex-direction: column;gap: 5px;align-items: center;width: 50%;">
+          <div style="display: flex;flex-direction: column;gap: 5px;align-items: center;width: 30%;">
             <mat-card-title class="p-10" style="color: #2565AE;">Screen Saver Setting</mat-card-title>
-            <div style="display: flex;gap: 5px;width: 30%;">
+            <div style="display: flex;gap: 5px;width: 40%;">
               <span>Screen saver :</span>
               <div class="switch-backdrop">
                 <ui-switch size="small" [formControl]="screenSaverFormControl"></ui-switch>
               </div>
             </div>
-            <form #screenSaverSetting="ngForm" style="width: 33%;">
+            <form #screenSaverSetting="ngForm" style="width: 45%;">
               <div class="field" style="width: 100%;margin-left: 16px;">
                 Interval Minutes<input type="number" name='interval_time'
                   [(ngModel)]="screen_saver_setting.interval_time" (click)="open(screenSaverSetting,'interval_time')">
@@ -403,179 +405,70 @@
               <button mat-raised-button style="line-height: 10px;" class="bg-failed">Cancel</button>
             </div>
           </div>
+          <span class="vertical-line" style="height: 14rem;"></span>
+          <form style="justify-content: initial;" #lightSettings="ngForm">
+            <mat-card-title style="background-color: transparent;border: none;" class="header-bg p-10">Light
+              Settings</mat-card-title>
+            <div style="display: flex;gap: 10px;">
+              <div class="align-column">
+                <div class="space">
+                  <span> ON Hour (0-24) : </span>
+                  <input type="number" name='on_hour' [(ngModel)]="lightSet.on_hour"
+                    (click)="open(lightSettings,'on_hour')">
+                </div>
+                <div class="space">
+                  <span> ON Min (0-59) : </span>
+                  <input type="number" name='on_min' [(ngModel)]="lightSet.on_min"
+                    (click)="open(lightSettings,'on_min')">
+                </div>
+              </div>
+
+              <div class="align-column">
+                <div class="space">
+                  <span> OFF Hour (0-24) : </span>
+                  <input type="number" name='off_hour' [(ngModel)]="lightSet.off_hour"
+                    (click)="open(lightSettings,'off_hour')">
+                </div>
+                <div class="space">
+                  <span> OFF Min (0-59):</span>
+                  <input type="number" name='off_min' [(ngModel)]="lightSet.off_min"
+                    (click)="open(lightSettings,'off_min')">
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-right: 4.3rem;height: 30px;width: 45%;" class="subrow"><button style="line-height: 10px;"
+                mat-raised-button disableOneSec class="bg-success" (click)="updateLightSettings(lightSettings)"
+                value="Update">Update</button>
+              <button mat-raised-button style="line-height: 10px;" class="bg-failed">Cancel</button>
+            </div>
+          </form>
         </div>
 
       </ng-template>
     </li>
 
-    <!-- Batch Settings -->
+    <!-- OAQ Settings -->
     <li [ngbNavItem]="9">
-      <a ngbNavLink>Batch Settings</a>
+      <a ngbNavLink>OAQ Settings</a>
       <ng-template ngbNavContent>
         <div style="padding: 5px; display: flex; flex-direction: row; gap: 10px;">
-          
-          <!-- LEFT HALF (50%) -->
-          <div style="width: 50%; display: flex; align-items: flex-start;">
-            <div [ngSwitch]="uiBatchMode" style="width: 100%;">
-              
-              <!-- Default View -->
-              <div *ngSwitchCase="'default'">
-                <mat-card class="mat-elevation-z3" style="padding: 10px; text-align: center; width: 100%; margin: 0; height: 180px;">
-                  <mat-card-title class="p-10" style="color: #2565AE; padding-bottom: 0;">Batch Settings</mat-card-title>
-                  
-                  <div *ngIf="currentBatchStatus?.batch === 0">
-                    <p style="font-size: 14px; margin: 5px 0;">No batch is currently running.</p>
-                    <button mat-raised-button class="bg-success" style="color: white; margin-top: 5px; line-height: 24px;" (click)="showCreateBatch()">Create New Batch</button>
-                  </div>
-                  
-                  <div *ngIf="currentBatchStatus?.batch === 1">
-                    <p style="font-size: 12px; margin: 5px 0;"><strong>Batch ID:</strong> {{ currentBatchStatus?.batchid }}</p>
-                    <p style="font-size: 12px; margin: 5px 0;"><strong>Start Date:</strong> {{ currentBatchStatus?.['start_date'] }}</p>
-                    <p style="font-size: 12px; margin: 5px 0;"><strong>Plant Type:</strong> {{ currentBatchStatus?.['plant_type'] }}</p>
-                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
-                      <button mat-raised-button class="bg-success" style="line-height: 24px;" (click)="showEditBatch()">Edit Details</button>
-                      <button mat-raised-button class="bg-failed" style="color: white; line-height: 24px;" (click)="showEndBatch()">End Batch</button>
-                    </div>
-                  </div>
-                </mat-card>
-              </div>
-
-              <!-- Create Batch View -->
-              <div *ngSwitchCase="'create'">
-                <mat-card class="mat-elevation-z3" style="padding: 5px 10px; width: 100%; height: 180px;  box-sizing: border-box; margin: 0;">
-                  <mat-card-title class="p-8" style="color: #2565AE; padding-bottom: 0;">Create New Batch</mat-card-title>
-                  <form #createBatchForm="ngForm" style="display: flex; flex-direction: column; gap: 2px; margin-top: 2px; font-size: 13px;">
-                    <!-- <div class="field" style="width: 100%; justify-content: space-between; margin-bottom: 0;">
-                      Batch ID 
-                      <input type="text" name="batchid" [(ngModel)]="batchFormData.batchid" style="height: 20px; width: 150px; padding: 2px;">
-                    </div> -->
-                    <div class="field" style="width: 100%; justify-content: space-between; margin-bottom: 0;">
-                      Plant Type
-                      <select name="plantType" [(ngModel)]="batchFormData.plant_type" style="padding: 2px; width: 150px; height: 24px;">
-                        <option *ngFor="let typ of plantTypes" [value]="typ">{{ typ }}</option>
-                      </select>
-                    </div>
-                    <div class="field" style="width: 100%; justify-content: space-between; margin-bottom: 0;">
-                      Start Date 
-                      <div style="display: flex; gap: 5px; width: 180px;">
-                        <select name="day" [(ngModel)]="batchFormData.day" style="padding: 2px; flex: 1; height: 24px;">
-                          <option *ngFor="let d of days" [value]="d">{{ d }}</option>
-                        </select>
-                        <select name="month" [(ngModel)]="batchFormData.month" style="padding: 2px; flex: 1; height: 24px;">
-                          <option *ngFor="let m of months" [value]="m">{{ m }}</option>
-                        </select>
-                        <select name="year" [(ngModel)]="batchFormData.year" style="padding: 2px; flex: 1; height: 24px;">
-                          <option *ngFor="let y of years" [value]="y">{{ y }}</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="field" style="width: 100%; justify-content: space-between; margin-bottom: 0;">
-                      No. of Slots Planted 
-                      <input type="number" name="noOfSlotsPlanted" [(ngModel)]="batchFormData.slots_planted" (click)="open(createBatchForm, 'noOfSlotsPlanted')" style="height: 20px; width: 150px; padding: 2px;">
-                    </div>
-                    <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: center;">
-                      <button mat-raised-button class="bg-success" style="color: white; line-height: 22px; height: 28px;" (click)="createBatch()">Start Batch</button>
-                      <button mat-raised-button class="bg-failed" style="color: white; line-height: 22px; height: 28px;" (click)="backToBatchDefault()">Back</button>
-                    </div>
-                  </form>
-                </mat-card>
-              </div>
-
-              <!-- Edit Batch View -->
-              <div *ngSwitchCase="'edit'">
-                <mat-card class="mat-elevation-z3" style="padding: 5px 10px; width: 100%; height: 180px; overflow-y: auto; box-sizing: border-box; margin: 0;">
-                  <mat-card-title class="p-10" style="color: #2565AE; padding-bottom: 0;">Edit Batch Details</mat-card-title>
-                  <form #editBatchForm="ngForm" style="display: flex; flex-direction: column; gap: 2px; margin-top: 2px; font-size: 13px;">
-                    <div class="field" style="width: 100%; justify-content: space-between; margin-bottom: 0;">
-                      Plant Type
-                      <select name="plantType" [(ngModel)]="batchFormData.plant_type" style="padding: 2px; width: 180px; height: 24px;">
-                        <option *ngFor="let typ of plantTypes" [value]="typ">{{ typ }}</option>
-                      </select>
-                    </div>
-                    <div class="field" style="width: 100%; justify-content: space-between; align-items: center; margin-bottom: 0;">
-                      Start Date
-                      <div style="display: flex; gap: 5px; width: 180px;">
-                        <select name="day" [(ngModel)]="batchFormData.day" style="padding: 2px; flex: 1; height: 24px;">
-                          <option *ngFor="let d of days" [value]="d">{{ d }}</option>
-                        </select>
-                        <select name="month" [(ngModel)]="batchFormData.month" style="padding: 2px; flex: 1; height: 24px;">
-                          <option *ngFor="let m of months" [value]="m">{{ m }}</option>
-                        </select>
-                        <select name="year" [(ngModel)]="batchFormData.year" style="padding: 2px; flex: 1; height: 24px;">
-                          <option *ngFor="let y of years" [value]="y">{{ y }}</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="field" style="width: 100%; justify-content: space-between; margin-bottom: 0;">
-                      No. of Slots Planted 
-                      <input type="number" name="noOfSlotsPlanted" [(ngModel)]="batchFormData.slots_planted" (click)="open(editBatchForm, 'noOfSlotsPlanted')" style="width: 180px; height: 20px; padding: 2px;">
-                    </div>
-                    <div style="margin-top: 5px; display: flex; gap: 10px; justify-content: center;">
-                      <button mat-raised-button class="bg-success" style="line-height: 22px; height: 28px;" (click)="saveEditBatch()">Save</button>
-                      <button mat-raised-button class="bg-failed" style="color: white; line-height: 22px; height: 28px;" (click)="backToBatchDefault()">Back</button>
-                    </div>
-                  </form>
-                </mat-card>
-              </div>
-
-              <!-- End Batch View -->
-              <div *ngSwitchCase="'end'">
-                <mat-card class="mat-elevation-z3" style="padding: 5px 10px; width: 100%; height: 180px; overflow-y: auto; box-sizing: border-box; margin: 0;">
-                  <mat-card-title class="p-10" style="color: #2565AE; padding-bottom: 0;">End Batch</mat-card-title>
-                  <form #endBatchForm="ngForm" style="display: flex; flex-direction: column; gap: 2px; margin-top: 2px; font-size: 13px;">
-                    <div class="field" style="width: 100%; justify-content: space-between; margin-bottom: 0;">
-                      Slots Harvested 
-                      <input type="number" name="slotsHarvested" [(ngModel)]="batchFormData.slots_harvested" (click)="open(endBatchForm, 'slotsHarvested')" style="height: 20px; width: 150px; padding: 2px;">
-                    </div>
-                    <div class="field" style="width: 100%; justify-content: space-between; margin-bottom: 0;">
-                      Weight / Plant (g)
-                      <input type="number" name="weightPerPlant" [(ngModel)]="batchFormData.avg_weight" (click)="open(endBatchForm, 'weightPerPlant')" style="height: 20px; width: 150px; padding: 2px;">
-                    </div>
-                    <div style="margin-top: 5px; display: flex; gap: 10px; justify-content: center;">
-                      <button mat-raised-button class="bg-warning" style="line-height: 22px; height: 28px;" (click)="endBatch()">End Batch</button>
-                      <button mat-raised-button class="bg-failed" style="color: white; line-height: 22px; height: 28px;" (click)="backToBatchDefault()">Cancel</button>
-                    </div>
-                  </form>
-                </mat-card>
-              </div>
-              
+          <div style="display: flex;flex-direction: column;gap: 5px;align-items: center;width: 100%;">
+            <mat-card-title class="p-10" style="color: #2565AE;">Outdoor Air Quality </mat-card-title>
+            <mat-radio-group id="radio-button" [value]="oaqSelection" (change)="onOaqOptionSelected($event.value)">
+              <mat-radio-button style="font-weight: 550;font-size: 16px;" value="API">API</mat-radio-button>
+              <mat-radio-button style="font-weight: 550;font-size: 16px;" value="Sensor">Sensor</mat-radio-button>
+            </mat-radio-group>
+            <div *ngIf="oaqSelection === 'Sensor' && oaqDeviceId"
+              style="margin-top: 10px; font-weight: 600; color: #2565AE;">
+              Device ID: {{ oaqDeviceId }}
+            </div>
+            <div style="margin-top: 17px;height: 30px;display: flex;gap: 17px;" class="subrow">
+              <button style="line-height: 10px;" mat-raised-button disableOneSec class="bg-success" type="submit"
+                value="Update" (click)="sendSystemType()">Update</button>
+              <button mat-raised-button style="line-height: 10px;" class="bg-failed">Cancel</button>
             </div>
           </div>
-          
-          <!-- RIGHT HALF (50%) -->
-          <div style="width: 50%;">
-            <mat-card class="mat-elevation-z3" style="padding: 10px; width: 100%; margin: 0; height: 180px; box-sizing: border-box;">
-              <mat-card-title class="p-10" style="color: #2565AE; padding-bottom: 0;">Previous Batches</mat-card-title>
-              <div style="height: 180px; overflow-y: auto;">
-                <table class="table" style="width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 12px;">
-                  <thead>
-                    <tr style="border-bottom: 2px solid #ccc; text-align: center;">
-                      <th style="padding: 5px;">Batch ID</th>
-                      <th style="padding: 5px;">Start Date</th>
-                      <th style="padding: 5px;">Plant Type</th>
-                      <th style="padding: 5px;">End Date</th>
-                      <th style="padding: 5px; width: 70px;">Delete</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr *ngFor="let batch of previousBatchesList" style="border-bottom: 1px solid #eee;">
-                      <td style="padding: 5px;">{{ batch?.batchid }}</td>
-                      <td style="padding: 5px;">{{ batch?.['start date'] }}</td>
-                      <td style="padding: 5px;">{{ batch?.['plant_type'] }}</td>
-                      <td style="padding: 5px;">{{ batch?.['end date'] }}</td>
-                      <td style="padding: 5px; text-align: center;">
-                        <button mat-raised-button class="bg-failed" style="color: white; min-width: 52px; height: 24px; line-height: 20px; padding: 0 8px; font-size: 11px;" (click)="deleteBatch(batch)">Delete</button>
-                      </td>
-                    </tr>
-                    <tr *ngIf="!previousBatchesList || previousBatchesList.length === 0">
-                      <td colspan="5" style="text-align: center; padding: 10px;">No batches found.</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </mat-card>
-          </div>
-          
         </div>
       </ng-template>
     </li>

@@ -203,6 +203,22 @@ class Settings:
     def put_screensaver(interval, status):
         return "00,02,09," + str(interval) + "," + str(status)
 
+    @staticmethod
+    def eMeter_reset():
+        return "00,02,10"
+    
+    @staticmethod
+    def EndCycle():
+        return "00,02,11"
+    
+    @staticmethod
+    def startCycle():
+        return "00,02,12"
+    
+    @staticmethod
+    def waterpas(mode):
+        return "00,02,13," + str(mode)
+    
     # @staticmethod
     # def turn_on_ec_a_pump():
     #     return "00,02,07,03"
@@ -251,7 +267,7 @@ class Decode:
     def data(result):
         if result is False: return False
         result = result.split(",")
-        if len(result) != 28:
+        if len(result) != 31:
             return False
         lightStat = list(result[12])
         if len(lightStat) is not 5:
@@ -292,7 +308,10 @@ class Decode:
             "ultrasonic": result[23],
             "water_topup": result[24],
             "water_flush": result[25],
-            "energy_meter": result[26]
+            "energy_meter": result[26],
+            "water_consumption": result[27],
+            "pre_water_cons": result[28],
+            "cum_water_cons": result[29],
         }
 
     @staticmethod

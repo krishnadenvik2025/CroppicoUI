@@ -5,7 +5,7 @@
     </div>
 
 
-    <div *ngIf="dialogData?.module !== 'wifi'" class="container">
+    <div *ngIf="dialogData?.module !== 'wifi' && dialogData?.module !== 'oaq'" class="container">
         <div style="margin-top: 1rem;">
             <form #auth="ngForm">
                 <mat-form-field>
@@ -25,6 +25,26 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- OAQ device ID -->
+    <div *ngIf="dialogData?.module == 'oaq'" class="container">
+        <div>
+            <!-- <div style="font-weight: 500;margin-bottom: 10px;">Outdoor Air Quality Sensor</div> -->
+            <form #oaqForm="ngForm">
+                <mat-form-field>
+                    <input matInput name="deviceId" placeholder="Device ID" [matKeyboard]="'en-GB'"
+                        [formControl]="oaqDeviceId" required>
+                    <mat-error *ngIf="oaqDeviceId.hasError('required')">Enter Device ID</mat-error>
+                    <mat-error *ngIf="oaqDeviceId.hasError('pattern')">Use letters and numbers only</mat-error>
+                </mat-form-field>
+            </form>
+
+            <div style="display: flex;gap: 11px; justify-content: center;">
+                <button mat-raised-button class="bg-failed" (click)="dialogRef.close()">Cancel</button>
+                <button mat-raised-button class="bg-success" (click)="sendOaqDeviceId()">Submit</button>
+            </div>
+        </div>
     </div>
 
     <!-- Wifi  -->

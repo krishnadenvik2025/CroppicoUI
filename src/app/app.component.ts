@@ -1,8 +1,8 @@
-import {Options} from '@angular-slider/ngx-slider';
-import {Component,ComponentFactoryResolver,OnChanges,OnInit,} from '@angular/core';
-import {Apex} from './chartinfo';
-import {HttpClient} from '@angular/common/http';
-import {environment} from 'src/environments/environment';
+import { Options } from '@angular-slider/ngx-slider';
+import { Component, ComponentFactoryResolver, OnChanges, OnInit, } from '@angular/core';
+import { Apex } from './chartinfo';
+import { HttpClient } from '@angular/common/http';
+import { environment } from 'src/environments/environment';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { APIS } from 'src/shared/model/api.model';
 import { AuthComponent } from 'src/shared/component/auth/auth.component';
@@ -11,6 +11,8 @@ import { ChartsComponent } from 'src/shared/component/charts/charts.component';
 import { GuideComponent } from 'src/shared/component/guide/guide.component';
 import { fromEvent } from 'rxjs';
 import { TopupDialogComponent } from 'src/shared/component/topup-dialog/topup-dialog.component';
+import { WaterControlDialogComponent } from 'src/shared/component/water-control-dialog/water-control-dialog.component';
+import { EmResetDialogComponent } from 'src/shared/component/em-reset-dialog/em-reset-dialog.component';
 import { ScreenSaverService } from 'src/core/screen-saver.service';
 
 @Component({
@@ -31,16 +33,13 @@ export class AppComponent implements OnInit, OnChanges {
   show_settings_screen: boolean = false;
   show_maintenance_screen: boolean = false;
   show_home_screen: boolean = true;
-  show_sensors_screen: boolean = false;
   show_info_screen: boolean = false;
   prevent_toggle: boolean = false;
   allData: any;
-  envData: any = {
-    total_harvest: 0,
-    plastic_waste: 0,
-    water_saved: 0,
-    food_miles: 0
-  };
+  ESGData: any;
+  IAQ: any;
+  OAQ: any;
+  outdoorMode: number = 0;
   currentFooterIndex: number = 0;
   footerInterval: any;
   footerVisible = true;
@@ -58,7 +57,8 @@ export class AppComponent implements OnInit, OnChanges {
       "Reducing environmental impact through smart monitoring.",
       "Creating awareness about indoor environmental quality.",
       "Building healthier and greener workplaces."
-    ]};
+    ]
+  };
   brightness_level: number = 5;
   light_last_updated: number = 0;
   disable_brightness_slider: boolean = false;
@@ -86,6 +86,38 @@ export class AppComponent implements OnInit, OnChanges {
     4: false,
     5: false,
   };
+  lightPanelExpanded: boolean = true;
+  readonly lightZoneOrder = [1, 2, 3, 4, 5];
+  readonly lightHues: { [key: number]: string } = {
+    1: '#2E9FC7',
+    2: '#8A5FD6',
+    3: '#B08122',
+    4: '#2E7FD6',
+    5: '#1E8E56',
+  };
+
+  get anyLightOn(): boolean {
+    return this.lightZoneOrder.some(i => this.light_state[i]);
+  }
+
+  get lightMasterBg(): string {
+    if (this.lightPanelExpanded) return '#16241B';
+    return this.anyLightOn ? '#F5B94D' : '#EEF1EA';
+  }
+
+  get lightMasterStroke(): string {
+    if (this.lightPanelExpanded) return '#FFFFFF';
+    return this.anyLightOn ? '#FFFFFF' : '#9AA79C';
+  }
+
+  get lightMasterGlow(): string {
+    if (this.lightPanelExpanded) return '0 2px 8px rgba(0,0,0,0.2)';
+    return this.anyLightOn ? '0 0 10px #F5B94D80' : 'none';
+  }
+
+  toggleLightPanel() {
+    this.lightPanelExpanded = !this.lightPanelExpanded;
+  }
   public isDisabled = false;
   public showScreenSaver = false;
   isIdle = false;
@@ -114,17 +146,18 @@ export class AppComponent implements OnInit, OnChanges {
     this.getSettings();
     this.startFooterRotation();
     this.getData();
-    this.getEnvData();
+    this.getesg();
+    this.getAQI();
     setInterval(() => {
       this.time = new Date();
-      // this.light_1_state = !this.light_1_state;
     }, 1000);
     setInterval(() => {
       if (!this.show_settings_screen && !this.show_maintenance_screen) {
         this.getData();
-        this.getEnvData();
+        this.getesg();
+        this.getAQI();
       }
-    }, 5000);
+    }, 20000);
   }
 
   fetchImageUrl() {
@@ -138,7 +171,7 @@ export class AppComponent implements OnInit, OnChanges {
         i = 0;
       }
       this.screen_saver_img = this.image_urls[i];
-    }, 1000 * 5);
+    }, 1000 * 20);
   }
 
   ngOnChanges(changes: any) {
@@ -149,9 +182,8 @@ export class AppComponent implements OnInit, OnChanges {
       retAlarm: true
     };
     this.httpPost(APIS.RESET_ALARM, obj);
-
-
   }
+
   async update() {
     const obj = {
       update: true
@@ -166,6 +198,45 @@ export class AppComponent implements OnInit, OnChanges {
     setTimeout(() => {
       this.isDisabled = false;
     }, 1000 * 10);
+  }
+
+  async EMReset() {
+    const config: MatDialogConfig = {
+      panelClass: "dialog-responsive",
+      disableClose: false,
+      minWidth: "320px",
+      data: {
+        title: "Energy Meter Reset",
+      },
+    };
+    this.screensaver.updateScreenSaverStatus(false);
+    const dialog = this.dialog.open(EmResetDialogComponent, config);
+    dialog.afterClosed().subscribe((result) => {
+      this.screensaver.updateScreenSaverStatus(true);
+      console.log('EMReset dialog closed:', result);
+      this.isDisabled = false;
+    });
+  }
+
+  openWaterControlPopUp() {
+    const config: MatDialogConfig = {
+      panelClass: "dialog-responsive",
+      disableClose: false,
+      minWidth: "360px",
+      data: {
+        title: "Water Control",
+      },
+    };
+    this.screensaver.updateScreenSaverStatus(false);
+    const dialog = this.dialog.open(WaterControlDialogComponent, config);
+    dialog.afterClosed().subscribe((result) => {
+      this.screensaver.updateScreenSaverStatus(true);
+      console.log('Water control dialog closed:', result);
+    });
+  }
+
+  async waterControl() {
+    this.openWaterControlPopUp();
   }
 
   async getData() {
@@ -193,28 +264,49 @@ export class AppComponent implements OnInit, OnChanges {
     }
   }
 
-  async getEnvData() {
-    let envApiCallData: any = await new Promise((resolve) => {
-      this.http
-        .get<any>(this.url + "/env/data").subscribe({
-          next: data => {
-            console.log("GET ENV DATA", data);
-            resolve(data);
-          },
-          error: error => {
-            console.log("Env Data Api error", error);
-            resolve(false);
-          }
-        });
+  async getesg() {
+    let esgdataapi: any = await new Promise((resolve, reject) => {
+      this.http.get<any[]>(this.url + "/esg/data").subscribe({
+        next: data => { resolve(data); },
+        error: error => { resolve(false); }
+      });
     });
+    if (esgdataapi) {
+      this.ESGData = esgdataapi;
+    }
+  }
 
-    if (envApiCallData) {
-      this.envData = {
-        total_harvest: envApiCallData.total_harvest || 0,
-        plastic_waste: envApiCallData.plastic_waste || 0,
-        water_saved: envApiCallData.water_saved || 0,
-        food_miles: envApiCallData.food_miles || 0
-      };
+  async getAQI() {
+    let IAQApiCallData: any = await new Promise((resolve, reject) => {
+      this.http.get<any[]>(this.url + "/aqi/indoor").subscribe({
+        next: data => {
+          resolve(data);
+        },
+        error: error => {
+          console.log(error);
+          resolve(false);
+        }
+      });
+    });
+    console.log("GET AQI", IAQApiCallData);
+    if (IAQApiCallData) {
+      this.IAQ = IAQApiCallData;
+    }
+    let OAQApiCallData: any = await new Promise((resolve, reject) => {
+      this.http.get<any[]>(this.url + "/aqi/outdoor").subscribe({
+        next: data => {
+          resolve(data);
+        },
+        error: error => {
+          console.log(error);
+          resolve(false);
+        }
+      });
+    });
+    console.log("GET OAQ", OAQApiCallData);
+    if (OAQApiCallData) {
+      this.OAQ = OAQApiCallData;
+      this.outdoorMode = this.OAQ?.outdoor_mode || 0;
     }
   }
 
@@ -223,18 +315,14 @@ export class AppComponent implements OnInit, OnChanges {
       this.footerVisible = false;
 
       setTimeout(() => {
-
-        const messages =
-          this.footerMessages[this.currentMainScreen] || [];
+        const messages = this.footerMessages[this.currentMainScreen] || [];
 
         if (messages.length) {
           this.currentFooterIndex =
             (this.currentFooterIndex + 1) % messages.length;
         }
         this.footerVisible = true;
-
       }, 500);
-
     }, 10000);
   }
 
@@ -279,8 +367,6 @@ export class AppComponent implements OnInit, OnChanges {
       this.screensaver.updateScreenSaverStatus(true)
       console.log(result);
     });
-
-
   }
 
   openTopupPopUp() {
@@ -362,26 +448,6 @@ export class AppComponent implements OnInit, OnChanges {
     });
   }
 
-  // updateStats(data: any) {
-  //   if (Object.keys(data).length) {
-  //     this.brightness_level = data.light_brightness || 0;
-  //     this.meterData = {
-  //       'water': [data["water_level"], data["water_flow"], data["water_temperature"]],
-  //       'ambient': [data["ambient_humid"], data["ambient_temp"]]
-  //     }
-  //     // console.log('date ',this.light_last_updated + 60, Math.floor(Date.now() / 1000),this.light_last_updated + 60 < Math.floor(Date.now() / 1000));
-  //     // && this.light_last_updated + 60 < Math.floor(Date.now() / 1000)
-  //     if (data?.light_stat?.length && this.light_last_updated + 60 < Math.floor(Date.now() / 1000)) {
-  //       for (let lS in data?.light_stat) {
-  //         this.light_state[parseInt(lS) + 1] = Boolean(data?.light_stat[lS]);
-  //       }
-  //       this.light_last_updated = Math.floor(Date.now() / 1000);
-  //     }
-
-  //   }
-
-  // }
-
   updateStats(data: any) {
     this.meterData = {
       'water': [data["water_level"], data["water_flow"], data["water_temperature"]],
@@ -399,7 +465,6 @@ export class AppComponent implements OnInit, OnChanges {
     this.show_info_screen = !this.show_info_screen;
     this.show_settings_screen = false;
     this.show_maintenance_screen = false;
-    this.show_sensors_screen = false;
     if (!this.show_info_screen) {
       this.show_home_screen = true;
     }
@@ -418,7 +483,7 @@ export class AppComponent implements OnInit, OnChanges {
           module: 'settings',
         },
       };
- 
+
       const dialog = this.dialog.open(AuthComponent, config);
       dialog.afterClosed().subscribe((result) => {
         console.log('close', result);
@@ -438,7 +503,6 @@ export class AppComponent implements OnInit, OnChanges {
       this.show_settings_screen = !this.show_settings_screen;
       this.show_maintenance_screen = false;
       this.show_info_screen = false;
-      this.show_sensors_screen = false;
       this.isShowResetAlarm = false;
     }
   }
@@ -465,7 +529,6 @@ export class AppComponent implements OnInit, OnChanges {
           this.show_settings_screen = false;
           this.show_home_screen = false;
           this.show_info_screen = false;
-          this.show_sensors_screen = false;
           this.isShowResetAlarm = false;
         }
       });
@@ -474,7 +537,6 @@ export class AppComponent implements OnInit, OnChanges {
       this.show_maintenance_screen = !this.show_maintenance_screen;
       this.show_settings_screen = false;
       this.show_info_screen = false;
-      this.show_sensors_screen = false;
       this.isShowResetAlarm = false;
     }
   }
@@ -485,28 +547,17 @@ export class AppComponent implements OnInit, OnChanges {
     }
     this.show_maintenance_screen = false;
     this.show_settings_screen = false;
-    this.show_sensors_screen = false;
     this.show_home_screen = true;
   }
-
-  showSensors() {
-    this.show_sensors_screen = true;
-    this.show_home_screen = false;
-    this.show_settings_screen = false;
-    this.show_maintenance_screen = false;
-    this.show_info_screen = false;
-  }
   async onLightBtnChange(lightNum: any) {
+    this.light_state[lightNum] = !this.light_state[lightNum];
     this.prevent_toggle = true;
-    setTimeout(() => {
-      this.prevent_toggle = false;
-    }
-      , 1000)
+    setTimeout(() => { this.prevent_toggle = false; }, 1000)
     console.log("onChange EVent")
     console.log(lightNum, this.light_state);
     let bod = {
       light: lightNum,
-      state: this.light_state[lightNum] ? 0 : 1
+      state: this.light_state[lightNum] ? 1 : 0
     };
     console.log(bod);
     await this.httpPost("lights", bod);
@@ -527,7 +578,6 @@ export class AppComponent implements OnInit, OnChanges {
     });
   }
 
-  // Method to update slider options dynamically
   updateSliderOptions() {
     this.slider_options = {
       ...this.slider_options,
@@ -535,26 +585,15 @@ export class AppComponent implements OnInit, OnChanges {
     };
   }
 
-  countdown: string = ''; 
-  timerInterval: any; 
+  countdown: string = '';
+  timerInterval: any;
 
   startCountdown(minutes: number) {
-    // Convert minutes to milliseconds
     let remainingTime = minutes * 60 * 1000;
-
-
-
-    // Initialize the countdown display
     this.updateCountdownDisplay(remainingTime);
-
-    // Start the interval to update the countdown every second
     this.timerInterval = setInterval(() => {
-      remainingTime -= 1000; // Decrement the remaining time by 1 second (1000 milliseconds)
-
-      // Update the countdown display
+      remainingTime -= 1000;
       this.updateCountdownDisplay(remainingTime);
-
-      // Stop the countdown when time runs out
       if (remainingTime <= 0) {
         clearInterval(this.timerInterval);
         if (this.show_maintenance_screen) {
@@ -563,24 +602,16 @@ export class AppComponent implements OnInit, OnChanges {
         else if (this.show_settings_screen) {
           this.show_settings_screen = false
         }
-        else if (this.show_sensors_screen) {
-          this.show_sensors_screen = false
-        }
-        this.countdown = '00:00'; // Display 00:00 when countdown ends
+        this.countdown = '00:00';
       }
     }, 1000);
   }
-
   updateCountdownDisplay(remainingTime: number) {
-    // Calculate the remaining minutes and seconds
     const minutes = Math.floor(remainingTime / (1000 * 60));
     const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
-
-    // Format minutes and seconds to display as two digits
     const minutesDisplay = minutes.toString().padStart(2, '0');
     const secondsDisplay = seconds.toString().padStart(2, '0');
 
-    // Update the countdown variable with formatted time
     this.countdown = `${minutesDisplay}:${secondsDisplay}`;
     console.log("this.countdown", this.countdown)
   }
@@ -601,7 +632,7 @@ export class AppComponent implements OnInit, OnChanges {
   get currentFooterText(): string {
     return (
       this.footerMessages[this.currentMainScreen]?.[
-        this.currentFooterIndex
+      this.currentFooterIndex
       ] || ''
     );
   }

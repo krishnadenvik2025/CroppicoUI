@@ -10,6 +10,8 @@ import { NgApexchartsModule } from "ng-apexcharts";
 import { GuideComponent } from './component/guide/guide.component';
 import { PdfViewerModule } from 'ng2-pdf-viewer';
 import { TopupDialogComponent } from './component/topup-dialog/topup-dialog.component';
+import { WaterControlDialogComponent } from './component/water-control-dialog/water-control-dialog.component';
+import { EmResetDialogComponent } from './component/em-reset-dialog/em-reset-dialog.component';
 
 @NgModule({
   declarations: [
@@ -18,7 +20,9 @@ import { TopupDialogComponent } from './component/topup-dialog/topup-dialog.comp
     FlushDialogComponent,
     ChartsComponent,
     GuideComponent,
-    TopupDialogComponent],
+    TopupDialogComponent,
+    WaterControlDialogComponent,
+    EmResetDialogComponent],
   imports: [
     CommonModule,
     MaterialModule,

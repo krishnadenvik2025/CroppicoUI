@@ -1,0 +1,176 @@
+.em-dialog-container {
+  min-width: 320px;
+  max-width: 400px;
+  font-family: 'Roboto', 'Trebuchet MS', sans-serif;
+  transition: all 0.25s ease-in-out;
+}
+
+.p-20 {
+  padding: 24px 20px;
+}
+
+.dialog-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #fefce8;
+  border: 2px solid #fef08a;
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.15);
+
+  .electricity-icon {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+  }
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Spinner */
+.spinner-container {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.spinner {
+  width: 42px;
+  height: 42px;
+  border: 3.5px solid #e5e7eb;
+  border-top-color: #f59e0b;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  font-size: 15px;
+  color: #4b5563;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Success Animation */
+.success-animation {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto;
+
+  .svg-green {
+    width: 70px;
+    display: block;
+    margin: 0 auto;
+  }
+
+  .path {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 0;
+
+    &.circle {
+      -webkit-animation: dash 0.8s ease-in-out;
+      animation: dash 0.8s ease-in-out;
+    }
+
+    &.check {
+      stroke-dashoffset: -100;
+      -webkit-animation: dash-check 0.8s 0.25s ease-in-out forwards;
+      animation: dash-check 0.8s 0.25s ease-in-out forwards;
+    }
+  }
+}
+
+@-webkit-keyframes dash {
+  0% {
+    stroke-dashoffset: 1000;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes dash {
+  0% {
+    stroke-dashoffset: 1000;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@-webkit-keyframes dash-check {
+  0% {
+    stroke-dashoffset: -100;
+  }
+  100% {
+    stroke-dashoffset: 900;
+  }
+}
+
+@keyframes dash-check {
+  0% {
+    stroke-dashoffset: -100;
+  }
+  100% {
+    stroke-dashoffset: 900;
+  }
+}
+
+.success-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #15803d;
+  margin: 8px 0 0 0;
+}
+
+/* Error State */
+.error-animation {
+  display: flex;
+  justify-content: center;
+}
+
+.error-text {
+  font-size: 15px;
+  font-weight: 500;
+  color: #b91c1c;
+  margin: 6px 0 0 0;
+}
+
+.failed-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.bg-success {
+  background-color: #209100 !important;
+  color: #ffffff !important;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 4px 12px;
+}
+
+.bg-failed {
+  background-color: #ef4444 !important;
+  color: #ffffff !important;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 4px 12px;
+}

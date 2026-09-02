@@ -2,29 +2,28 @@
   <div *ngIf="!showScreenSaver" class="light-bar"
     [ngStyle]="prevent_toggle ? {'pointer-events':'none'} : {'pointer-events':'initial'}">
     <div class="light-backdrop">
-      <div *ngIf="!show_brightness_slider" class="switch-panel">
-        <div class="switch-backdrop">
-          <ui-switch size="small" [(ngModel)]="light_state[5]" (change)="onLightBtnChange(5)"></ui-switch>
-        </div>
-        <div class="switch-backdrop">
-          <ui-switch size="small" [(ngModel)]="light_state[4]" (change)="onLightBtnChange(4)"></ui-switch>
-        </div>
-        <div class="switch-backdrop">
-          <ui-switch size="small" [(ngModel)]="light_state[3]" (change)="onLightBtnChange(3)"></ui-switch>
-        </div>
-        <div class="switch-backdrop">
-          <ui-switch size="small" [(ngModel)]="light_state[2]" (change)="onLightBtnChange(2)"></ui-switch>
-        </div>
-        <div class="switch-backdrop">
-          <ui-switch size="small" [(ngModel)]=" light_state[1]" (change)="onLightBtnChange(1)"></ui-switch>
-        </div>
+      <div *ngIf="!show_brightness_slider" class="light-zones">
+        <button *ngFor="let zoneNum of lightZoneOrder" type="button" class="light-zone-btn"
+          [class.collapsed]="!lightPanelExpanded"
+          [style.background]="light_state[zoneNum] ? lightHues[zoneNum] : '#EEF1EA'"
+          [style.boxShadow]="light_state[zoneNum] ? ('0 0 10px ' + lightHues[zoneNum] + '80') : 'none'"
+          (click)="onLightBtnChange(zoneNum)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3 11.2c.6.35 1 .98 1 1.68V16h4v-.12c0-.7.4-1.33 1-1.68A6 6 0 0 0 12 3Z"
+              [attr.stroke]="light_state[zoneNum] ? '#FFFFFF' : '#9AA79C'" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round" [attr.fill]="light_state[zoneNum] ? '#FFFFFF' : 'none'"></path>
+          </svg>
+        </button>
       </div>
       <div *ngIf="show_brightness_slider" class="birghtness-slider">
         <ngx-slider [(ngModel)]="brightness_level" [options]="slider_options"
           (userChangeEnd)="onLightBrightnessChange()"></ngx-slider>
       </div>
-      <div class="brightness-button">
-        <svg width="50" height="50" viewBox="0 0 61.165 61.165">
+      <div class="brightness-button" (click)="toggleLightPanel()" [style.background]="lightMasterBg"
+        [style.boxShadow]="lightMasterGlow">
+        <svg width="42" height="42" viewBox="0 0 61.165 61.165"
+          [style.transform]="lightPanelExpanded ? 'rotate(90deg)' : 'rotate(0deg)'">
           <g id="Icon_ionic-ios-sunny" data-name="Icon ionic-ios-sunny" transform="translate(-3.375 -3.375)">
             <g id="brightness_icon" data-name="brightness_icon" transform="translate(3.375 3.375)">
               <path id="Path_398" data-name="Path 398"
@@ -100,17 +99,20 @@
             <img class="update bounce" src="../assets/images/update.png" alt="">
           </a>
         </div>
+        <div style="display: flex;gap: 5px;height: 35px;" *ngIf="show_maintenance_screen">
+          <a mat-button disableOneSec style="padding: 0;min-width: auto;" [ngClass]="{'disable-class':isDisabled}"
+            (click)="EMReset()">
+            <img class="update bounce" src="../assets/images/electricity.png" alt="">
+          </a>
+        </div>
+        <div style="display: flex;gap: 5px;height: 35px;" *ngIf="show_maintenance_screen">
+          <a mat-button disableOneSec style="padding: 0;min-width: auto;" [ngClass]="{'disable-class':isDisabled}"
+            (click)="waterControl()">
+            <img class="update bounce" src="../assets/images/water_pause.png" alt="">
+          </a>
+        </div>
         <div *ngIf="isShowResetAlarm && !show_settings_screen " (click)="reserAlarm()" class="p-r-10">
           <img class="info bounce" src="../assets/images/reset-error.png" alt="">
-        </div>
-        <div *ngIf="!show_settings_screen && !show_maintenance_screen" (click)="showSensors()" class="p-r-10">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="35" height="35" fill="white">
-            <path
-              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
-            <circle cx="12" cy="12" r="3" />
-            <path
-              d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z" />
-          </svg>
         </div>
         <!-- <img src="../assets/images/wifi/wifi_not_connected.svg" style="width: 35px;height: 35px"/> -->
         <img *ngIf="wifi_signal_image &&!show_settings_screen && !show_maintenance_screen"
@@ -122,9 +124,9 @@
 
     </div>
     <div style="z-index: 0 !important;" #mainContent>
-      <app-mainstatus [meterData]="meterData" [allData]="allData" [envData]="envData" (screenChanged)="currentMainScreen = $event"
-        *ngIf="!show_settings_screen && !show_maintenance_screen && !show_info_screen && !show_sensors_screen"></app-mainstatus>
-      <app-sensors *ngIf="show_sensors_screen" [allData]="allData"></app-sensors>
+      <app-mainstatus [meterData]="meterData" [allData]="allData" [IAQ]="IAQ" [OAQ]="OAQ" [outdoorMode]="outdoorMode"
+        [ESGData]="ESGData" (screenChanged)="currentMainScreen = $event"
+        *ngIf="!show_settings_screen && !show_maintenance_screen && !show_info_screen "></app-mainstatus>
       <app-settings (screenSaverData)="screenSaverData($event)"
         *ngIf="show_settings_screen && !show_maintenance_screen && !show_info_screen"></app-settings>
       <app-maintenance *ngIf="show_maintenance_screen && !show_settings_screen && !show_info_screen"></app-maintenance>
@@ -190,15 +192,6 @@
             data-name="02 Wrench Hammer, Fix, Hammer, Repair" fill="#595bd4" class="color000000 svgShape"></path>
         </svg>
       </div>
-      <!-- <div (click)="showSensors()" style="width: 30;margin-right: 20px;">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="70" height="70" fill="#4CAF50">
-          <path
-            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
-          <circle cx="12" cy="12" r="3" />
-          <path
-            d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z" />
-        </svg>
-      </div> -->
       <div (click)="showHome()" style="width: 30;margin-right: 20px;">
         <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="70" height="70" viewBox="0 0 172 172"
           style=" fill:#000000;">
@@ -221,18 +214,21 @@
           </g>
         </svg>
       </div>
-      <div *ngIf="show_home_screen && !show_settings_screen && !show_maintenance_screen && !show_sensors_screen && !show_info_screen" style="position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; justify-content: center; height: 100%;">
-        <div class="footer-message" [class.hidden]="!footerVisible" *ngIf="currentMainScreen === 1" style="background: #ffffff; border: 1px solid #53ad43; padding: 12px 24px; border-radius: 12px; font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; font-size: 18px; display: flex; align-items: center; color: #374151;  text-align: center; min-width: 700px; margin-right: 280px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-           <svg style="margin-right: 12px;" width="24" height="24" viewBox="0 0 24 24" fill="#6ba755">
-              <path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 7,11.5 7,11.5C7,11.5 12,8 17,8Z" />
-           </svg>
-           <!-- Homie's 72 plants are actively absorbing CO₂ and releasing fresh oxygen. -->{{ currentFooterText }}
+      <div *ngIf="show_home_screen && !show_settings_screen && !show_maintenance_screen && !show_info_screen"
+        style="position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; justify-content: center; height: 100%;">
+        <div class="footer-message" [class.hidden]="!footerVisible" *ngIf="currentMainScreen === 1"
+          style="background: #ffffff; border: 1px solid #53ad43; padding: 12px 24px; border-radius: 12px; font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; font-size: 18px; display: flex; align-items: center; color: #374151;  text-align: center; min-width: 700px; margin-right: 280px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+          <svg style="margin-right: 12px;" width="24" height="24" viewBox="0 0 24 24" fill="#6ba755">
+            <path
+              d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 7,11.5 7,11.5C7,11.5 12,8 17,8Z" />
+          </svg>
+          <!-- Homie's 72 plants are actively absorbing CO₂ and releasing fresh oxygen. -->{{ currentFooterText }}
         </div>
         <div class="footer-message" [class.hidden]="!footerVisible" *ngIf="currentMainScreen === 2" style="background: #ffffff; border: 1px solid #53ad43;
         padding: 12px 40px; border-radius: 12px; font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; 
         font-size: 18px; display: flex; align-items: center; color: #374151; text-align: center; justify-content: center;
         margin-right: 280px; min-width: 800px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-           <!-- Aligning your workspace with UN Sustainable Development Goals 2, 12, and 13. -->{{ currentFooterText }}
+          <!-- Aligning your workspace with UN Sustainable Development Goals 2, 12, and 13. -->{{ currentFooterText }}
         </div>
       </div>
     </div>

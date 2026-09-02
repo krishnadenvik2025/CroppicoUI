@@ -1,6 +1,6 @@
 import datetime
 import json, sqlite3
-import time, datetime
+import time, datetime, traceback
 from threading import Thread, Timer
 from typing import List
 from serial import Serial, SerialException, PARITY_NONE
@@ -8,7 +8,7 @@ from sqlitedict import SqliteDict
 import baselogger
 from connection_handler import ConnectionHandler
 from constants import Message, StoreParams, MaintenanceEvents, ErrorEvents, Peripherals
-from slave_request_new import Requests
+from slave_request_esg import Requests
 import RPi.GPIO as GPIO
 import sys
 from local_publish import Publish
@@ -25,23 +25,19 @@ GPIO.setup(12, GPIO.OUT)
 
 now = lambda: int(time.time())
 datenow = lambda: datetime.datetime.now()
-
 logToFile = True
-
 
 def readConfig():
     with open('/home/pi/croppico-api-new/config.json', 'r') as c:
         config = json.load(c)
     return config
 
-
 class SlaveController(Thread):
     def __init__(self, device_id):
         super(SlaveController, self).__init__()
         self.device_id = device_id
         self.__run_controller = False
-        self.__ser = Serial('/dev/ttyUSB0', 9600, timeout=2.0, parity=PARITY_NONE)
-        #self.__ser = Serial('/dev/serial0', 115200, timeout=2.0, parity=PARITY_NONE)
+        self.__ser = Serial('/dev/serial0', 115200, timeout=2.0, parity=PARITY_NONE)
         self.__slave_requests = Requests()
         self.connectionHandler = ConnectionHandler(self.device_id)
         self.messages = Message()
@@ -97,6 +93,7 @@ class SlaveController(Thread):
         self.restart_timer = 0
         self.processConfig = readConfig()
         self.program_name = self.processConfig["program_name"]
+        self.__db_path = '/home/pi/croppico-api-new/sensor_data.db'
 
     def run(self):
         try:
@@ -104,8 +101,14 @@ class SlaveController(Thread):
                 self.logger.info("Started running...")
             self.brightness_control.start(self.light_brightness)
             # self.checkLightSchedule()
-            if datetime.time(21, 0, 0) > datetime.time(datenow().hour, datenow().minute,
-                                                       datenow().second) > datetime.time(7, 0, 0):
+            with sqlite3.connect(self.__db_path) as conn:
+                lgt = conn.execute(""" SELECT on_hour, on_min, off_hour, off_min FROM light_settings LIMIT 1 """).fetchone()
+                if lgt:
+                    on_hour,on_min,off_hour,off_min= int(lgt[0]),int(lgt[1]),int(lgt[2]),int(lgt[3])
+                else:
+                    on_hour,on_min,off_hour,off_min= 7,0,21,0
+            if datetime.time(off_hour, off_min, 0) > datetime.time(datenow().hour, datenow().minute,
+                                                       datenow().second) > datetime.time(on_hour, on_min, 0):
                 if logToFile:
                     self.logger.removeHandler(self.logger.handlers[0])
                     self.logger = baselogger.get_logger('Slave Controller')
@@ -167,25 +170,36 @@ class SlaveController(Thread):
                             time.sleep(5)
                     else:
                         pre = self.__isUserControlling
+                    print("this is before time check")
+                    print(f"last updated.....{self.__lastUpdatedTime} andd.... {now()}")
                     if self.__lastUpdatedTime + 110 < now():
                         try:
+                            print("this is after time check")
                             pubRes = self.__data.copy()
                             pubRes["timestamp"] = now()
                             resStr = ""
+                            print("this is before")
                             if not self.uartError:
+                                print("this is after")
                                 for i in range(len(self.__data["light_stat"])):
                                     if self.__data["light_stat"][i] == 1:
                                         resStr += "true"
                                     else:
                                         resStr += "false"
                                     resStr += ":"
-                                resStr = resStr[:-1]
+                                print("end of for loop")
+                                resStr = resStr[:-1]                                
                                 pubRes["light_stat"] = resStr
                                 pubRes["light_brightness"] = self.light_brightness
                                 self.supplementLevels["supp_ph_inc"] = str(int(not int(pubRes["supp_ph_inc"])))
                                 self.supplementLevels["supp_ph_dec"] = str(int(not int(pubRes["supp_ph_dec"])))
                                 self.supplementLevels["supp_ec_a"] = str(int(not int(pubRes["supp_ec_a"])))
                                 self.supplementLevels["supp_ec_b"] = str(int(not int(pubRes["supp_ec_b"])))
+                                print("this is getting iaq")
+                                self.getIaq()
+                                pubRes['iaq'] = self.iaqdata
+                                pubRes['oaq'] = self.iaqdata
+                                print("this is after getting iaq")
                                 self.connectionHandler.publish(self.messages.data, json.dumps(pubRes))
                                 # if self.__data["error"] == "1":
                                 # pubAlarmRes = None
@@ -216,7 +230,7 @@ class SlaveController(Thread):
     def pollSlave(self, request, need_response=True):
         self.isComBusy = True
         # time.sleep(0.5)
-        try:
+        try: 
             self.__ser.flush()
             self.__ser.flushInput()
             self.__ser.flushOutput()
@@ -324,6 +338,56 @@ class SlaveController(Thread):
                 self.brightness_control.ChangeDutyCycle(self.light_brightness)
             self.schLightState = False
 
+    # def getIaq(self):
+    #     conn = sqlite3.connect('/home/pi/croppico-api-new/sensor_data.db')
+    #     res = conn.execute(
+    #         'SELECT aqi, temp, hump, co2, voc, pm2_5 '
+    #         'FROM indoor_aqi ORDER BY id DESC LIMIT 1'
+    #     ).fetchone()
+    #     conn.close()
+    #     keys = ['aqi', 'temp', 'hum', 'co2', 'voc', 'pm2p5']
+    #     self.iaqdata = dict(zip(keys, res))
+    def getIaq(self):
+        try:
+            conn = sqlite3.connect(self.__db_path)
+            res = conn.execute("""SELECT aqi, temp, hump, co2, voc, pm2_5 FROM indoor_aqi ORDER BY id DESC LIMIT 1""").fetchone()
+            print("Result:", res)
+            conn.close()
+            if res:
+                keys = ['aqi', 'temp', 'hum', 'co2', 'voc', 'pm2p5']
+                self.iaqdata = dict(zip(keys, res))
+            else:
+                self.iaqdata = {}
+        except Exception as e:
+            traceback.print_exc()
+
+    def getOaq(self):
+        try:
+            conn = sqlite3.connect(self.__db_path)
+            res = conn.execute("""SELECT aqi, temp, hump, co2, voc, pm2_5 FROM outdoor_aqi ORDER BY id DESC LIMIT 1""").fetchone()
+            print("Result:", res)
+            conn.close()
+            if res:
+                keys = ['aqi', 'temp', 'hum', 'co2', 'voc', 'pm2p5']
+                self.oaqdata = dict(zip(keys, res))
+            else:
+                self.oaqdata = {}
+        except Exception as e:
+            traceback.print_exc()
+
+    def setOaq(self, data):
+        try:
+            conn = sqlite3.connect(self.__db_path)
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO outdoor_aqi (aqi, temp, hump, co2, voc, pm2_5)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (data['aqi'], data['temp'], data['hum'], data['co2'], data['voc'], data['pm2p5']))
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            traceback.print_exc()
+        
     def get_debug_data(self):
         ph_debug_data = str(self.pollSlave(self.__slave_requests.get_ph_debug()))
         print(ph_debug_data)
@@ -381,11 +445,6 @@ class SlaveController(Thread):
             self.__ser.flush()
             self.uartError = True
             self.crcErrorCount += 1
-            # else:
-            #     print("Has alarm")
-            #
-            # else:
-            #     print("not notty decoded")
         time.sleep(1)
 
     def insert_data(self, timestamp, ph, ec, ambient_temp, water_temp, ec_a_dose, ec_b_dose, ph_up_dose, ph_down_dose):
@@ -491,19 +550,11 @@ class SlaveController(Thread):
 
     def getSlaveData(self):
         self.__isUserControlling = False
-        # self.checkSlaveStatus()
         return self.__data, self.__alarm
-        # return {"data": self.__data, "alarm": self.__alarm}
 
     def setLightStatus(self, light, state):
-        # while self.isComBusy: pass
-        #        if self.isComBusy: self.__ser.flushInput()
-        #        if self.isComBusy:
-        #            print("waiting for serial")
-        #            time.sleep(0.4)
         while self.isComBusy: pass
         result = False
-        # print(type(light), type(state))
         if light == 0:
             result = self.pollSlave(self.__slave_requests.Lights.set_brightness(state), need_response=False)
             self.light_brightness = state
@@ -514,16 +565,11 @@ class SlaveController(Thread):
             self.store[self.storeparams.alllights] = state
         else:
             result = self.pollSlave(self.__slave_requests.Lights.set_light(light, state), need_response=True)
-            # print(result)
             self.store[self.storeparams.lights(light)] = state
-        # print("LIGHT", result)
-        # self.logger.info("Lights "+result)
         self.lastUserInputTime = now()
         if logToFile: self.logger.info(">> Pressing light " + str(self.lastUserInputTime))
-        # while self.isComBusy: pass
         if self.isComBusy: self.__ser.flushInput()
         time.sleep(0.3)
-        # self.checkSlaveStatus()
         return True if result is not False else False
 
     def checkResult(self, result):
@@ -548,15 +594,13 @@ class SlaveController(Thread):
     def setNewSettings(self, stype, params):
         while self.isComBusy: pass
         result = False
-        # print(stype, params)
         if stype == "waterpump":
             print('water pump')
-            # print("",self.__slave_requests.Settings.set_pump_time(params["ontime"], params["offtime"]))
             if logToFile: self.logger.info("Update water pump settings")
-            # print(len(tx), tx)
             result = self.pollSlave(self.__slave_requests.Settings.set_pump_time(params["offtime"], params["ontime"]))
             if logToFile: self.logger.info("maintanence mtype check" + str(result))
             self.store[self.storeparams.settings.water_pump_settings] = params
+
             self.connectionHandler.publish(self.messages.setting, json.dumps({"water_pump": params}))
         elif stype == "ph":
             print('pH Limits')
@@ -677,7 +721,32 @@ class SlaveController(Thread):
             print("restart system since emergency")
             if logToFile: self.logger.info("topup stops...")
             return True if result is not False else False
-
+        
+    def ResetWater(self):
+        result = self.pollSlave(self.__slave_requests.reset_water())
+        if logToFile: self.logger.info("Resetting water...")
+        return True if result is not False else False
+    
+    def eMeterReset(self):
+        result = self.pollSlave(self.__slave_requests.eMeter_reset())
+        if logToFile: self.logger.info("Resetting eMeter...")
+        return True if result is not False else False
+    
+    def startBatch(self):
+        result = self.pollSlave(self.__slave_requests.startCycle())
+        if logToFile: self.logger.info("Starting Cycle...")
+        return True if result is not False else False
+    
+    def EndBatch(self):
+        result = self.pollSlave(self.__slave_requests.EndCycle())
+        if logToFile: self.logger.info("Ending Cycle...")
+        return True if result is not False else False
+    
+    def waterpas(self, mode):
+        result = self.pollSlave(self.__slave_requests.waterpas(mode))
+        if logToFile: self.logger.info("Water control mode: %s..." % mode)
+        return True if result is not False else False
+    
     def screen_saver(self, interval_time, status):
         result = self.pollSlave(self.__slave_requests.Settings.put_screensaver(interval_time, status))
         if logToFile: self.logger.info("screensaver settings...")
@@ -720,6 +789,57 @@ class SlaveController(Thread):
                 res = False
         if res:
             self.setMaintenanceState(False)
+
+    def EndCycledata(self, data):
+        try:  
+            conn = sqlite3.connect("/home/pi/croppico-api-new/sensor_data.db")
+            cursor = conn.cursor()
+            start_date = datetime.strptime(data["start_date"], "%d.%m.%Y").strftime("%Y-%m-%d")
+            end_date = datetime.strptime(data["end_date"], "%d.%m.%Y").strftime("%Y-%m-%d")
+            with sqlite3.connect(self.__db_path) as con:
+                cum_data = con.execute("""SELECT cum_water_saved, cum_miles_saved, cum_plastic_avoided, cum_total_yeild, cum_power_saved 
+                FROM esg_summary ORDER BY id DESC LIMIT 1""").fetchone()
+                print("cum_data", cum_data)
+                if cum_data:
+                    cum_water_saved = (cum_data[0] if cum_data[0] else 0) + data.get("water_saved", 0)
+                    cum_miles_saved = (cum_data[1] if cum_data[1] else 0) + data.get("miles_saved", 0)
+                    cum_plastic_avoided = (cum_data[2] if cum_data[2] else 0) + data.get("plastic_avoided", 0)
+                    cum_total_yeild = (cum_data[3] if cum_data[3] else 0) + data.get("total_yeild", 0)
+                    cum_power_saved = (cum_data[4] if cum_data[4] else 0) + data.get("power_saved", 0)
+                else:
+                    cum_water_saved = data.get("water_saved", 0)
+                    cum_miles_saved = data.get("miles_saved", 0)
+                    cum_plastic_avoided = data.get("plastic_avoided", 0)
+                    cum_total_yeild = data.get("total_yeild", 0)
+                    cum_power_saved = data.get("power_saved", 0)
+
+            cursor.execute("""UPDATE esg_summary set start_date = ?, end_date = ?, water_saved = ?, miles_saved = ?,
+                    plastic_avoided = ?, total_yeild = ?, power_saved = ?, cum_water_saved = ?, cum_miles_saved = ?,
+                    cum_plastic_avoided = ?, cum_total_yeild = ?, cum_power_saved = ? WHERE growcycle_id = ? """, (
+                 start_date, end_date, data.get("water_saved", 0), data.get("miles_saved", 0), data.get("plastic_avoided", 0),
+                data.get("total_yeild", 0), data.get("power_saved", 0), cum_water_saved, cum_miles_saved, 
+                cum_plastic_avoided, cum_total_yeild, cum_power_saved,data.get("growCycle_id", 0)))
+            conn.commit()
+            conn.close()
+            res = self.EndBatch()
+            if logToFile:self.logger.info(f"ESG EndCycle summary stored successfully.{res}")
+        except Exception as e:
+            if logToFile:self.logger.exception(f"Error storing ESG EndCycle data: {e}")
+
+    def StartCycledata(self, data):
+        try:
+            conn = sqlite3.connect(self.__db_path)
+            cursor = conn.cursor()
+            start_date = datetime.strptime(data["start_date"], "%d.%m.%Y").strftime("%Y-%m-%d")
+            cursor.execute("""INSERT INTO esg_summary (growcycle_id, start_date) VALUES (?, ?)""", (
+                int(data.get("growCycle_id", 0)), start_date))
+            conn.commit()
+            conn.close()
+            res = self.startBatch()
+            print("res", res)
+            if logToFile:self.logger.info(f"ESG StartCycle summary stored successfully. {res}")
+        except Exception as e:
+            if logToFile:self.logger.exception(f"Error storing ESG StartCycle data: {e}")
 
     def setMaintenanceControl(self, mtype, state, duration):
         result = False
@@ -799,11 +919,15 @@ class SlaveController(Thread):
         try:
             if cmType == "maintenance":
                 self.processAdhoc(cmMsg)
+            if cmType == "StartCycle":
+                self.StartCycledata(cmMsg)
+            if cmType == "EndCycle":
+                self.EndCycledata(cmMsg)
             if cmType == "reset":
                 self.resetError()
-                self.connectionHandler.publish(self.messages.event,
-                                               json.dumps({"event": "error_reset"}))
-
+                self.connectionHandler.publish(self.messages.event,json.dumps({"event": "error_reset"}))
+            if cmType == "oaq":
+                self.setOaq(cmMsg)
             if cmType == "settings":
                 ''' {"device_id": "00000000d4ad6605", "water_pump": {"ontime": "20:00",
                 "offtime": "90:00"}, "peal": "6"}, "ec_thresholds": {"ecideal": "1.1"},
@@ -1054,35 +1178,3 @@ class SlaveController(Thread):
             # True
             # >> > datetime.time(21, 0, 0) > datetime.time(now().hour, now().minute, now().second) > datetime.time(7, 0,
             #  
-
-    def readSEN66(self):
-            global sensor
-            try:
-                (pm1p0, pm2p5, pm4p0, pm10p0,
-                humidity, temperature, voc_index, nox_index, co2
-                ) = sensor.read_measured_values()
-                
-                breakpoints = [(0.0, 12.0, 0, 50),(12.1, 35.4, 51, 100),(35.5, 55.4, 101, 150),(55.5, 150.4, 151, 200),(150.5, 250.4, 201, 300),(250.5, 350.4, 301, 400),(350.5, 500.4, 401, 500),]
-
-                for Clow, Chigh, Ilow, Ihigh in breakpoints:
-                    if Clow <= pm2p5.value <= Chigh:
-                        aqi = ((Ihigh - Ilow) / (Chigh - Clow)) * (pm2p5.value - Clow) + Ilow
-                        aqi = round(aqi)
-
-                conn = sqlite3.connect("/home/pi/croppico-api-new/sensor_data.db")
-                conn.execute(
-                    'INSERT INTO aqi (pm2_5, temp, hump, co2, aqi) VALUES (?,?,?,?,?)',
-                    (pm2p5.value, temperature.value, humidity.value, co2.value, aqi)
-                )
-                conn.execute(''' DELETE FROM aqi WHERE id NOT IN (
-                        SELECT id FROM aqi ORDER BY id DESC LIMIT ?)''', (20,))
-                conn.commit()
-                conn.close()
-
-                print(f"[SEN66] pm2.5={pm2p5.value} temp={temperature.value} "
-                    f"hum={humidity.value} co2={co2.value} aqi={aqi}")
-
-            except sqlite3.Error as e:
-                print(f"[SEN66] DB error: {e}")
-            except Exception as e:
-                print(f"[SEN66] Sensor read error: {type(e).__name__} – {e}")

@@ -34,39 +34,53 @@ img.update {
 }
 
 .light-bar {
-  width: 80px;
-  padding: 5px;
+  width: 72px;
+  padding: 4px;
 }
 
 .light-backdrop {
-  width: 70px;
-  height: 480px;
-  background-color: #ffffff;
-  border-radius: 60px;
-  padding-top: 25px;
+  width: 64px;
+  height: 100%;
+  background-color: #fdfdfd;
+  border-radius: 41px;
+  padding: 12px 0;
   display: flex;
   flex-direction: column;
-}
-
-.light-backdrop .switch-backdrop {
-  height: 50px;
-  margin: 5px;
-  border-radius: 10px;
-  display: block;
   align-items: center;
-  background-color: #ffffff;
-  /* z-index: 10; */
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.4);
-  padding-top: 15px;
+  box-sizing: border-box;
 }
 
-.light-backdrop .switch-backdrop > ui-switch {
-  margin: 13px;
+.light-zones {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  margin-top: 30px;
 }
 
-/* .switch-panel{
-    display: block;
-} */
+.light-zone-btn {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform .35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity .3s ease, background .25s, box-shadow .25s;
+}
+
+.light-zone-btn.collapsed {
+  transform: scale(0.4);
+  opacity: 0;
+  pointer-events: none;
+}
 
 .birghtness-slider {
   padding: 20px;
@@ -79,16 +93,23 @@ img.update {
 }
 
 .light-backdrop .brightness-button {
-  position: absolute;
+  position: fixed;
+  left: 6px;
+  margin-top: 303px;
+  width: 60px;
   height: 60px;
-  margin: 5px;
-  margin-top: 300px;
-  border-radius: 10px;
-  display: block;
+  border-radius: 50%;
+  display: flex;
   align-items: center;
-  background-color: #6d6d6d;
-  padding: 5px;
-  /* padding-top: 1px; */
+  justify-content: center;
+  background-color: #060606;
+  cursor: pointer;
+  transition: background .25s, box-shadow .25s;
+  z-index: 10;
+}
+
+.light-backdrop .brightness-button svg {
+  transition: transform .4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .content-space {

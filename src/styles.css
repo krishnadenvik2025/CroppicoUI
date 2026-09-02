@@ -12,7 +12,18 @@ body {
 
 body {
   margin: 0;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+  font-family: 'Plus Jakarta Sans', Roboto, "Helvetica Neue", sans-serif;
+}
+
+/* Keeps live-updating numeric values (sensor readings, ESG figures) from
+   jittering the layout as digits change width between polls. */
+.card-value,
+.param-value,
+.impact-value,
+.impact-panel-value,
+.aqi-gauge-value,
+.reservoir-value {
+  font-variant-numeric: tabular-nums;
 }
 
 .mat-dialog-container {

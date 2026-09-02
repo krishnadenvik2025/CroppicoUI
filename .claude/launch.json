@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "cropicco-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["ng", "serve", "--configuration", "development", "--port", "4300"],
+      "port": 4300
+    }
+  ]
+}

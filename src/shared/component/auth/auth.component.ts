@@ -16,6 +16,7 @@ export class AuthComponent implements OnInit {
   public closeKeyboard = false;
   public password = new FormControl('', [Validators.required]);
   public wifiPassword = new FormControl('', [Validators.required]);
+  public oaqDeviceId = new FormControl('', [Validators.required, Validators.pattern(/^[A-Za-z0-9]+$/)]);
   constructor(public dialogRef: MatDialogRef<AuthComponent>,
     private http: HttpClient,
     private modalService: NgbModal,
@@ -53,6 +54,16 @@ export class AuthComponent implements OnInit {
 
     }
 
+  }
+
+  sendOaqDeviceId() {
+    if (this.oaqDeviceId.invalid) {
+      return;
+    }
+
+    if (this.dialogData?.module == 'oaq') {
+      this.dialogRef.close({ oaqDeviceId: this.oaqDeviceId.value?.trim() });
+    }
   }
 
 

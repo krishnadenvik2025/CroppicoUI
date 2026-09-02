@@ -24,7 +24,6 @@ import { InfoComponent } from './info/info.component';
 import { DisableOneSecDirective } from 'src/shared/directives/disable-one-sec.directive';
 import { PdfViewerModule } from 'ng2-pdf-viewer';
 import { ScreenSaverService } from 'src/core/screen-saver.service';
-import { SensorsComponent } from './sensors/sensors.component';
 
 @NgModule({
   declarations: [
@@ -35,8 +34,7 @@ import { SensorsComponent } from './sensors/sensors.component';
     KeypadComponent,
     KeyboardComponent,
     InfoComponent,
-    DisableOneSecDirective,
-    SensorsComponent
+    DisableOneSecDirective
   ],
   imports: [
     BrowserModule,

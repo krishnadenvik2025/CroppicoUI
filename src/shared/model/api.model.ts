@@ -14,5 +14,6 @@ export enum APIS {
     SYSTEM_TYPE = 'settings/systemsetting',
     GET_GRAPH_DATA = 'historicalData',
     GETGUIDE = 'getGuideMediaList',
-    SCREEN_SAVER = 'screensaverdata'
+    SCREEN_SAVER = 'screensaverdata',
+    WATER_CONTROL = 'system/watercon'
 }

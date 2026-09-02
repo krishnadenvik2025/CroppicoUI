@@ -65,8 +65,13 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
     ecideal: 0,
     ecsensor_setpoint: 0,
     ecpump_setpoint: 0
-
   };
+  lightSet: any = {
+    on_hour: 0,
+    on_min: 0,
+    off_hour: 0,
+    off_min: 0
+  }
   wtTempSet: any = {
     tempmax: 0,
     tempideal: 0,
@@ -86,16 +91,8 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
   systemFormControl = new FormControl('');
   screenSaverFormControl = new FormControl(false);
   @Output() screenSaverData: any = new EventEmitter();
-
-  // Batch Settings
-  currentBatchStatus: any = { batch: 0 };
-  uiBatchMode: string = 'default';
-  batchFormData: any = {};
-  previousBatchesList: any[] = [];
-  plantTypes: string[] = ['Basil', 'Lettuce', 'Tomato', 'Strawberry'];
-  days: number[] = Array.from({length: 31}, (_, i) => i + 1);
-  months: string[] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  years: number[] = [2024, 2025, 2026, 2027, 2028, 2029, 2030];
+  oaqSelection: 'API' | 'Sensor' | '' = '';
+  oaqDeviceId: string = '';
 
   constructor(private modalService: NgbModal,
     private http: HttpClient,
@@ -112,16 +109,12 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.getSettings();
     this.getVersion();
     this.getWifiNames();
-    this.getBatchStatus();
-    this.getPreviousBatches();
-    setTimeout(()=>{
+
+    setTimeout(() => {
       this.systemScreen(1);
-    },100)
-      this.intervalId =  setInterval(() => {
+    }, 100)
+    this.intervalId = setInterval(() => {
       this.getWifiNames();
-      this.getBatchStatus();
-      this.getPreviousBatches();
-      // this.light_1_state = !this.light_1_state;
     }, 10000);
   }
 
@@ -176,23 +169,21 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   }
 
-  async systemScreen(index:any) {
+  async systemScreen(index: any) {
     let payloadData;
-    if(index == 1)
-    {
+    if (index == 1) {
       payloadData = {
-        "screen":"settings",
-        "status":"true"
+        "screen": "settings",
+        "status": "true"
       }
     }
-    if(index == 2)
-      {
-        payloadData = {
-          "screen":"settings",
-          "status":"false"
-        }
+    if (index == 2) {
+      payloadData = {
+        "screen": "settings",
+        "status": "false"
       }
-    
+    }
+
     this.httpPost("system/screen", payloadData);
 
   }
@@ -216,6 +207,7 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
       this.wtPumpSet = this.allSettings["water_pump_setting"];
       this.pHSet = this.allSettings["ph_setting"];
       this.eCSet = this.allSettings["ec_setting"];
+      this.lightSet = this.allSettings["light"]
       this.wtTempSet = {
         tempmax: this.allSettings["water_temperature_setting"].tempmax || 0,
         tempideal: this.allSettings["water_temperature_setting"].tempideal || 0,
@@ -233,42 +225,38 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
 
 
   async getWifiNames() {
-  // const data = { "cur": "DENVIK AIRTEL", "res": ["Denvik_JIO2_4_EXT", "DENVIK AIRTEL", "JioFiber-Ped1o", "JioFiber-x3R2q", "JP Home", "MANI5", "VASKANNEN"] }
-  // let k: any = data;
-
-
-  // const moveToTop = k["res"];
-  // const index = moveToTop?.indexOf(k["cur"]);
-  // const element = moveToTop.splice(index, 1)[0];
-  // moveToTop.unshift(element);
-  // this.wifinamelist = moveToTop;
-  // this.curWifiName = k["cur"];
-  var wifinames = await new Promise((resolve, reject) => {
-    this.http
-      .get<any[]>(this.url + "/system/wifinames").subscribe({
-        next: data => {
-          let k: any = data;
-          const moveToTop = k["res"];
-          const index = moveToTop?.indexOf(k["cur"]);
-          const element = moveToTop.splice(index, 1)[0];
-          moveToTop.unshift(element);
-          this.wifinamelist = moveToTop;
-          this.curWifiName = k?.cur || '';
-          resolve(data);
-        },
-        error: error => {
-          console.log(error);
-          resolve(false);
-        }
-      });
-  });
-  console.log(this.wifinamelist, this.curWifiName);
-  // this.wifiname = wifinames;
+    var wifinames = await new Promise((resolve, reject) => {
+      this.http
+        .get<any>(this.url + "/system/wifinames").subscribe({
+          next: data => {
+            let k: any = data;
+            const moveToTop: any[] = k["res"] || [];
+            const index = moveToTop.findIndex((w: any) => w?.ssid === k["cur"]);
+            if (index > -1) {
+              const element = moveToTop.splice(index, 1)[0];
+              moveToTop.unshift(element);
+            }
+            this.wifinamelist = moveToTop;
+            this.curWifiName = k?.cur || '';
+            resolve(data);
+          },
+          error: error => {
+            console.log(error);
+            resolve(false);
+          }
+        });
+    });
+    console.log(this.wifinamelist, this.curWifiName);
   }
 
   async updateWaterPumpSettings(form: NgForm) {
     console.log('Water Pump Setting Data : ', form.value);
     await this.httpPost("settings/waterpump", form.value);
+  }
+
+  updateLightSettings(form: NgForm) {
+    console.log('Light Settings Data: ', form.value);
+    this.httpPost("settings/light", form.value);
   }
 
   updatePhSettings(form: NgForm) {
@@ -453,7 +441,41 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
           };
           isValidFn(obj);
           break;
+        case inputItem == 'on_hour':
+          obj = {
+            min: 0,
+            max: 23,
+            value: Number(receivedEntry)
+          };
+          isValidFn(obj);
+          break;
 
+        case inputItem == 'on_min':
+          obj = {
+            min: 0,
+            max: 59,
+            value: Number(receivedEntry)
+          };
+          isValidFn(obj);
+          break;
+
+        case inputItem == 'off_hour':
+          obj = {
+            min: 0,
+            max: 23,
+            value: Number(receivedEntry)
+          };
+          isValidFn(obj);
+          break;
+
+        case inputItem == 'off_min':
+          obj = {
+            min: 0,
+            max: 59,
+            value: Number(receivedEntry)
+          };
+          isValidFn(obj);
+          break;
         default:
           tempFormVal[inputItem] = receivedEntry;
           form.setValue(tempFormVal);
@@ -529,7 +551,6 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   }
 
-
   async sendScreenSaverData(data: NgForm) {
     console.log("Entering onClick sendScreenSaverData")
     const obj = { status: Boolean(Number(this.screenSaverFormControl.value)), interval_time: Number(data.value.interval_time) };
@@ -538,221 +559,40 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log("after api call")
   }
 
+  onOaqOptionSelected(option: 'API' | 'Sensor') {
+    if (option === 'Sensor') {
+      const config: MatDialogConfig = {
+        panelClass: "dialog-responsive",
+        disableClose: true,
+        height: '220px',
+        position: {
+          top: "10px"
+        },
+        data: {
+          module: 'oaq'
+        }
+      };
+
+      const dialog = this.dialog.open(AuthComponent, config);
+      dialog.afterClosed().subscribe((res) => {
+        if (res?.oaqDeviceId) {
+          this.oaqSelection = option;
+          this.oaqDeviceId = res.oaqDeviceId;
+        }
+      });
+    } else {
+      this.oaqSelection = option;
+      this.oaqDeviceId = '';
+    }
+  }
+
   ngOnDestroy(): void {
-    setTimeout(()=>{
+    setTimeout(() => {
       this.systemScreen(2);
-    },100);
+    }, 100);
 
     if (this.intervalId) {
-    clearInterval(this.intervalId);
-    }
-  }
-
-  // --- BATCH SETTINGS METHODS ---
-
-  private formatBatchDate(dateValue: any): any {
-    if (typeof dateValue !== 'string') {
-      return dateValue;
-    }
-
-    return dateValue.split(' ')[0];
-  }
-
-  private formatBatchDay(day: any): string {
-    return String(day || '').padStart(2, '0');
-  }
-
-  private normalizeBatch(batch: any): any {
-    if (!batch) {
-      return { batch: 0 };
-    }
-
-    const startDate = batch['start date'] ?? batch.start_date;
-    const endDate = batch['end date'] ?? batch.end_date;
-
-    return {
-      ...batch,
-      batch: batch.batch ?? (batch.status === 'running' ? 1 : 0),
-      batchid: batch.batchid ?? batch.batch_id,
-      'start date': this.formatBatchDate(startDate),
-      'end date': this.formatBatchDate(endDate),
-      plantType: batch.plantType ?? batch.plant_type,
-      noOfSlotsPlanted: batch.noOfSlotsPlanted ?? batch.slots_planted,
-      slotsHarvested: batch.slotsHarvested ?? batch.slots_harvested,
-      weightPerPlant: batch.weightPerPlant ?? batch.avg_weight
-    };
-  }
-
-  private normalizeBatchList(list: any): any[] {
-    if (Array.isArray(list)) {
-      return list.map((batch) => this.normalizeBatch(batch));
-    }
-
-    if (list && typeof list === 'object') {
-      return Object.keys(list).map((key) => this.normalizeBatch(list[key]));
-    }
-
-    return [];
-  }
-
-  async getBatchStatus() {
-    try {
-      console.log("Batch API GET /batch: request started");
-      let status: any = await new Promise((resolve) => {
-        this.http.get<any>(this.url + "/batch").subscribe({
-          next: data => {
-            console.log("Batch API GET /batch: response", data);
-            resolve(data);
-          },
-          error: error => {
-            console.log("Batch API GET /batch: error", error);
-            resolve({ batch: 0 });
-          }
-        });
-      });
-      this.currentBatchStatus = this.normalizeBatch(status);
-      console.log("Batch status normalized", this.currentBatchStatus);
-    } catch (e) {
-      console.log("Error fetching batch status", e);
-    }
-  }
-
-  async getPreviousBatches() {
-    try {
-      console.log("Batch API GET /batch/list: request started");
-      let list: any = await new Promise((resolve) => {
-        this.http.get<any>(this.url + "/batch/list").subscribe({
-          next: data => {
-            console.log("Batch API GET /batch/list: response", data);
-            resolve(data);
-          },
-          error: error => {
-            console.log("Batch API GET /batch/list: error", error);
-            resolve([]);
-          }
-        });
-      });
-      this.previousBatchesList = this.normalizeBatchList(list).reverse(); 
-      console.log("Previous batches normalized", this.previousBatchesList);
-    } catch (e) {
-      console.log("Error fetching previous batches", e);
-    }
-  }
-
-  showCreateBatch() {
-    console.log("Batch UI: show create batch form");
-    this.batchFormData = {
-      // batchid: '',
-      plantType: this.plantTypes[0],
-      startDate: '',
-      noOfSlotsPlanted: ''
-    };
-    this.uiBatchMode = 'create';
-  }
-
-  async showEditBatch() {
-    console.log("Batch UI: show edit batch form", this.currentBatchStatus);
-    this.batchFormData = {
-      plantType: this.plantTypes[0],
-      day: this.days[0],
-      month: this.months[0],
-      year: this.years[0],
-      noOfSlotsPlanted: ''
-    };
-    this.uiBatchMode = 'edit';
-    
-    if (this.currentBatchStatus && this.currentBatchStatus.batchid) {
-      try {
-        console.log("Batch API GET /batch/" + this.currentBatchStatus.batchid + "/details: request started");
-        let details: any = await new Promise((resolve) => {
-          this.http.get<any>(this.url + "/batch/" + this.currentBatchStatus.batchid + "/details").subscribe({
-            next: data => {
-              console.log("Batch API GET /batch/" + this.currentBatchStatus.batchid + "/details: response", data);
-              resolve(data);
-            },
-            error: error => {
-              console.log("Batch API GET /batch/" + this.currentBatchStatus.batchid + "/details: error", error);
-              resolve(null);
-            }
-          });
-        });
-        if (details) {
-          this.batchFormData = { ...this.batchFormData, ...details };
-          console.log("Batch edit form populated", this.batchFormData);
-        }
-      } catch(e) { }
-    }
-  }
-
-  showEndBatch() {
-    console.log("Batch UI: show end batch form", this.currentBatchStatus);
-    this.batchFormData = {
-      slotsHarvested: '',
-      weightPerPlant: ''
-    };
-    this.uiBatchMode = 'end';
-  }
-
-  backToBatchDefault() {
-    console.log("Batch UI: back to default view");
-    this.uiBatchMode = 'default';
-  }
-
-  async createBatch() {
-    console.log("Batch operation: create started", this.batchFormData);
-    const dataToPost = {
-      ...this.batchFormData,
-      day: this.formatBatchDay(this.batchFormData.day)
-    };
-    await this.httpPost("batch/create", dataToPost);
-    await this.getBatchStatus();
-    await this.getPreviousBatches();
-    console.log("Batch operation: create completed");
-    this.backToBatchDefault();
-  }
-
-  async saveEditBatch() {
-    if (this.currentBatchStatus && this.currentBatchStatus.batchid) {
-      const formattedDay = this.formatBatchDay(this.batchFormData.day);
-      const dataToPost = {
-        ...this.batchFormData,
-        day: formattedDay,
-        startDate: `${formattedDay} ${this.batchFormData.month} ${this.batchFormData.year}`
-      };
-      console.log("Batch operation: edit started", this.currentBatchStatus.batchid, dataToPost);
-      await this.httpPost("batch/edit/" + this.currentBatchStatus.batchid, dataToPost);
-      await this.getBatchStatus();
-      await this.getPreviousBatches();
-      console.log("Batch operation: edit completed", this.currentBatchStatus.batchid);
-      this.backToBatchDefault();
-    }
-  }
-
-  async endBatch() {
-    if (this.currentBatchStatus && this.currentBatchStatus.batchid) {
-      console.log("Batch operation: end started", this.currentBatchStatus.batchid, this.batchFormData);
-      await this.httpPost("batch/end/" + this.currentBatchStatus.batchid, this.batchFormData);
-      await this.getBatchStatus();
-      await this.getPreviousBatches();
-      console.log("Batch operation: end completed", this.currentBatchStatus.batchid);
-      this.backToBatchDefault();
-    }
-  }
-
-  async deleteBatch(batch: any) {
-    if (batch && batch.batchid) {
-      console.log("Batch operation: delete requested", batch);
-      const shouldDelete = window.confirm("Are you sure you want to delete batch " + batch.batchid + "?");
-      if (!shouldDelete) {
-        console.log("Batch operation: delete cancelled", batch.batchid);
-        return;
-      }
-
-      console.log("Batch operation: delete started", batch.batchid);
-      await this.httpPost("batch/delete/" + batch.batchid, {});
-      await this.getBatchStatus();
-      await this.getPreviousBatches();
-      console.log("Batch operation: delete completed", batch.batchid);
+      clearInterval(this.intervalId);
     }
   }
 }

@@ -1,0 +1,56 @@
+<div class="water-dialog-container">
+
+  <!-- Idle State: Action Selection -->
+  <div *ngIf="controlStatus === 'IDLE'" class="p-20 dialog-body">
+    <div class="icon-wrapper">
+      <img class="water-icon" src="../../../assets/images/water_pause.png" alt="Water Control" />
+    </div>
+
+    <div class="action-buttons">
+      <button mat-raised-button class="action-btn btn-pause" (click)="executeWaterControl('pause')">
+        <span>Pause</span>
+      </button>
+
+      <button mat-raised-button class="action-btn btn-resume" (click)="executeWaterControl('resume')">
+        <span>Resume</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="controlStatus === 'LOADING'" class="p-20 dialog-body text-center">
+    <div class="spinner-container">
+      <div class="spinner"></div>
+    </div>
+    <p class="loading-text">Sending {{ activeAction | titlecase }} command to system...</p>
+  </div>
+
+  <!-- Success State -->
+  <div *ngIf="controlStatus === 'SUCCESS'" class="p-20 dialog-body text-center">
+    <div class="success-animation">
+      <svg class="svg-green" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
+        <circle class="path circle" fill="none" stroke="#209100" stroke-width="6" stroke-miterlimit="10" cx="65.1"
+          cy="65.1" r="62.1" />
+        <polyline class="path check" fill="none" stroke="#209100" stroke-width="6" stroke-linecap="round"
+          stroke-miterlimit="10" points="100.2,40.2 51.5,88.8 29.8,67.5 " />
+      </svg>
+    </div>
+    <p class="success-text">{{ statusMessage }}</p>
+  </div>
+
+  <!-- Failed State -->
+  <div *ngIf="controlStatus === 'FAILED'" class="p-20 dialog-body text-center">
+    <div class="error-animation">
+      <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#e53935" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="15" y1="9" x2="9" y2="15"></line>
+        <line x1="9" y1="9" x2="15" y2="15"></line>
+      </svg>
+    </div>
+    <p class="error-text">{{ statusMessage }}</p>
+    <div class="failed-actions">
+      <button mat-raised-button class="bg-success" (click)="resetStatus()">Try Again</button>
+      <button mat-raised-button class="bg-failed" (click)="close()">Close</button>
+    </div>
+  </div>
+</div>

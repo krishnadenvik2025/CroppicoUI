@@ -23,13 +23,14 @@ export class KeypadComponent implements OnInit {
   keyPress (key: any) {
     switch (key) {
       case "Done":
-        // console.log("Done Pressed", this.value);
         console.log("Submitting : ", this.value);
         this.passEntry.emit(this.value);
+        // this.activeModal.close(this.value);
         break;
       case "Cancel":
         console.log("Restoring Default : ", this.defVal);
         this.passEntry.emit(this.defVal);
+        // this.activeModal.close(this.defVal);
         break;
       case "Clear":
         if (this.value.length > 0) {

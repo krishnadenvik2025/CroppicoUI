@@ -1,0 +1,24 @@
+  GNU nano 3.2                                                                            cctv.service
+
+[Unit]
+Description=Sending HLS chunks to webserver using WebSocket
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=sudo /usr/bin/python3 /home/pi/cctv/cctv.py
+WorkingDirectory=/home/pi
+User=pi
+Group=pi
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+cd /var/www/
+   86  rm -rf html
+   87  cp -r /home/pi/krishna/cropicco-ui/html/ /var/www/html
+   88  reboot

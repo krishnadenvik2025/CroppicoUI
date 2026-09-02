@@ -23,6 +23,7 @@
     "@angular/platform-browser": "~12.2.0",
     "@angular/platform-browser-dynamic": "~12.2.0",
     "@angular/router": "~12.2.0",
+    "@fontsource/plus-jakarta-sans": "^5.2.8",
     "@ng-bootstrap/ng-bootstrap": "^10.0.0",
     "angular-onscreen-material-keyboard": "^0.6.0",
     "apexcharts": "^3.29.0",

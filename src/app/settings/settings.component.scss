@@ -165,7 +165,24 @@ form > .subrow {
   /* z-index: 100; */
   display: flex;
   flex-direction: row;
+  align-items: center;
   justify-content: space-between;
+}
+
+.wifi-security-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 10px;
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.wifi-security-badge.open {
+  background-color: #dcfce7;
+  color: #16a34a;
 }
 
 .wifibtn {
