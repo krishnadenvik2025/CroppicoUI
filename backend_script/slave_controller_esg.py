@@ -12,6 +12,7 @@ from slave_request_esg import Requests
 import RPi.GPIO as GPIO
 import sys
 from local_publish import Publish
+from sen66 import indoorAQI_flag
 
 # GPIO.setmode(GPIO.BOARD)
 # GPIO.setup(12, GPIO.OUT)
@@ -37,7 +38,7 @@ class SlaveController(Thread):
         super(SlaveController, self).__init__()
         self.device_id = device_id
         self.__run_controller = False
-        self.__ser = Serial('/dev/serial0', 115200, timeout=2.0, parity=PARITY_NONE)
+        self.__ser = Serial('/dev/ttyUSB0', 115200, timeout=2.0, parity=PARITY_NONE)
         self.__slave_requests = Requests()
         self.connectionHandler = ConnectionHandler(self.device_id)
         self.messages = Message()
@@ -207,6 +208,9 @@ class SlaveController(Thread):
                                     pubAlarmRes = self.__alarm.copy()
                                     pubAlarmRes.update(self.supplementLevels)
                                     pubAlarmRes["timestamp"] = now()
+                                    pubAlarmRes['iaq_error'] = "1" if not indoorAQI_flag else "0"
+                                    pubAlarmRes['oaq_error'] = "0"
+                                    pubAlarmRes['Water_level_critically_low'] = "1" if self.__data["water_level"] == 0 else "0"
                                     print("ALARM  : ", pubAlarmRes)
                                     self.connectionHandler.publish(self.messages.alarm, json.dumps(pubAlarmRes))
                                 # self.checkCloudMaintenanceControl("ALL")
@@ -319,8 +323,14 @@ class SlaveController(Thread):
 
     def checkLightSchedule(self):
         # print("Light", self.schLightState)
-        if datetime.time(21, 0, 0) > datetime.time(datenow().hour, datenow().minute, datenow().second) > datetime.time(
-                7, 0, 0):
+        with sqlite3.connect(self.__db_path) as conn:
+            lgt = conn.execute(""" SELECT on_hour, on_min, off_hour, off_min FROM light_settings LIMIT 1 """).fetchone()
+            if lgt:
+                on_hour,on_min,off_hour,off_min= int(lgt[0]),int(lgt[1]),int(lgt[2]),int(lgt[3])
+            else:
+                on_hour,on_min,off_hour,off_min= 7,0,21,0
+        if datetime.time(off_hour, off_min, 0) > datetime.time(datenow().hour, datenow().minute,
+                                                    datenow().second) > datetime.time(on_hour, on_min, 0):
             if not self.schLightState:
                 if logToFile: self.logger.removeHandler(self.logger.handlers[0])
                 if logToFile: self.logger = baselogger.get_logger('Slave Controller')
@@ -728,22 +738,23 @@ class SlaveController(Thread):
         return True if result is not False else False
     
     def eMeterReset(self):
-        result = self.pollSlave(self.__slave_requests.eMeter_reset())
+        print("Entered into EM Reset block")
+        result = self.pollSlave(self.__slave_requests.Settings.eMeter_reset())
         if logToFile: self.logger.info("Resetting eMeter...")
         return True if result is not False else False
     
     def startBatch(self):
-        result = self.pollSlave(self.__slave_requests.startCycle())
+        result = self.pollSlave(self.__slave_requests.Settings.startCycle())
         if logToFile: self.logger.info("Starting Cycle...")
         return True if result is not False else False
     
     def EndBatch(self):
-        result = self.pollSlave(self.__slave_requests.EndCycle())
+        result = self.pollSlave(self.__slave_requests.Settings.EndCycle())
         if logToFile: self.logger.info("Ending Cycle...")
         return True if result is not False else False
     
     def waterpas(self, mode):
-        result = self.pollSlave(self.__slave_requests.waterpas(mode))
+        result = self.pollSlave(self.__slave_requests.Settings.waterpas(mode))
         if logToFile: self.logger.info("Water control mode: %s..." % mode)
         return True if result is not False else False
     

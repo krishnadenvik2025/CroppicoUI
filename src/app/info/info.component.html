@@ -2,7 +2,8 @@
     <div class="row-warp-class">
         <ng-container *ngFor="let data of infoData">
             <div>
-                <div class="header-bg p-10" *ngIf="data.key !== 'EC DOSE TIME' && data.key !== 'PH DOWN DOSE TIME' && data.key !== 'PH UP DOSE TIME'">
+                <div class="header-bg p-10" *ngIf="data.key !== 'EC DOSE TIME' && data.key !== 'PH DOWN DOSE TIME' && data.key !== 'PH UP DOSE TIME' && data.key !== 'AMBIENT TEMP' && data.key !== 'WATER TEMPERATURE' && data.key !== 'IRRIGATION STATE' && data.key !== 'CHILLER STATE' && data.key !== 'LIGHT BRIGHTNESS' &&
+                     data.key !== 'LIGHT STAT' && data.key !== 'WATER FLOW'">
                     {{data.key}}
                     <div style="color: black;font-size: 14px;margin-top: 4px;"> {{data.value}}</div>
                 </div>

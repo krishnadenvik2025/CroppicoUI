@@ -8,14 +8,17 @@ logToFile = False
 
 def check_internet(timeout=3):
     test_servers = [("1.1.1.1", 53),("8.8.8.8", 53),("9.9.9.9", 53)]
+    print("checking internet...")
 
     for host, port in test_servers:
         try:
             socket.setdefaulttimeout(timeout)
             with socket.create_connection((host, port), timeout):
+                print("internet is available")
                 return True
         except OSError:
             continue
+    print("internet is not available")
     return False
 
 db_path = "/home/pi/croppico-api-new/sensor_data.db"

@@ -15,6 +15,7 @@ _parser.add_argument('--i2c-port', '-p', default='/dev/i2c-1')
 _args, _unknown = _parser.parse_known_args()
 i2c_transceiver = None
 sensor = None
+indoorAQI_flag = True
 
 def init_sensor():
     global sensor, i2c_transceiver
@@ -27,10 +28,12 @@ def init_sensor():
         sensor.device_reset()
         time.sleep(1)
         sensor.start_continuous_measurement()
+        indoorAQI_flag = True
         print("SEN66 sensor initialized")
         return True
     except Exception as e:
         print(f"Failed to initialize SEN66 sensor: {e}")
+        indoorAQI_flag = False
         sensor = None
         return False
     

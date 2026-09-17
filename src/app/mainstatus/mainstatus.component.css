@@ -131,7 +131,7 @@
 }
 
 .card-badge {
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.4px;
   color: #2e7d32;
@@ -146,7 +146,7 @@
 }
 
 .card-label {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.3px;
   color: #6b7280;
@@ -209,7 +209,7 @@
 }
 
 .ops-label {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.3px;
   color: #6b7280;

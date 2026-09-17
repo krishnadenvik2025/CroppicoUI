@@ -300,7 +300,7 @@ def model():
 #New
 @app.route('/system/resetwater', methods=["GET"])
 def resetwater():
-    res = slave.ResetWater()
+    res = slave.ResetWater()    
     return {'result': res}
 #New
 @app.route('/system/EMReset', methods=["GET"])
@@ -489,22 +489,23 @@ def outdoor_aqi():
 @app.route('/aqi/outdoor/mode', methods=["POST"])
 def set_outdoor_aqi_mode():
     try:
-        data = request.json
+        data = request.get_json()
         mode = data.get("mode")
-        if mode == "sensor":
-            sensor_device_id = data.get("device_id")
-            if not sensor_device_id:
-                return jsonify({"error": "Device ID is required for sensor mode"}), 400
-            with sqlite3.connect(db_path) as conn:
-                conn.execute("UPDATE oaq SET mode = ?, device_id = ?", (mode, sensor_device_id))
-                conn.commit()
-        elif mode == "api":
-            with sqlite3.connect(db_path) as conn:
-                conn.execute("UPDATE oaq SET mode = ?", (mode,))
-                conn.commit()
-        else:
-            return jsonify({"error": "Invalid mode"}), 400
-        return jsonify({"result": True})
+        device_id = data.get("device_id")
+
+        if mode not in ("api", "sensor"):
+            return jsonify({"error": "Invalid mode. Use 'api' or 'sensor'"}), 400
+
+        if mode == "sensor" and not device_id:
+            return jsonify({"error": "Device ID is required for sensor mode"}), 400
+
+        with sqlite3.connect(db_path) as conn:
+            if mode == "sensor":
+                conn.execute("UPDATE oaq SET mode = ?, device_id = ?",(mode, device_id))
+            else:
+                conn.execute("UPDATE oaq SET mode = ?",(mode,))
+            conn.commit()
+        return jsonify({"result": True,"mode": mode,"device_id": device_id})
     except Exception as e:
         print(f"Error setting outdoor AQI mode: {type(e)} - {e}")
         return jsonify({"error": "Failed to set outdoor AQI mode"}), 500
@@ -514,14 +515,19 @@ def get_outdoor_aqi_mode():
     try:
         with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT mode FROM oaq")
+            cursor.execute("SELECT mode, device_id FROM oaq LIMIT 1")
             row = cursor.fetchone()
+
             if row is None:
                 return jsonify({"error": "No mode set"}), 404
+
             mode = row[0]
-        return jsonify({"mode": mode})
+            device_id = row[1]
+
+        return jsonify({ "mode": mode,"device_id": device_id})
+
     except Exception as e:
-        print(f"Error getting outdoor AQI mode: {type(e)} – {e}")
+        print(f"Error getting outdoor AQI mode: {type(e)} - {e}")
         return jsonify({"error": "Failed to get outdoor AQI mode"}), 500
 
 @app.route('/esg/data', methods=['GET'])

@@ -448,7 +448,7 @@
       </ng-template>
     </li>
 
-    <!-- OAQ Settings -->
+    <!-- OAQ Settings
     <li [ngbNavItem]="9">
       <a ngbNavLink>OAQ Settings</a>
       <ng-template ngbNavContent>
@@ -465,9 +465,60 @@
             </div>
             <div style="margin-top: 17px;height: 30px;display: flex;gap: 17px;" class="subrow">
               <button style="line-height: 10px;" mat-raised-button disableOneSec class="bg-success" type="submit"
-                value="Update" (click)="sendSystemType()">Update</button>
+                value="Update" (click)="changeOAQType(oaqSelection,oaqDeviceId)">Update</button>
               <button mat-raised-button style="line-height: 10px;" class="bg-failed">Cancel</button>
             </div>
+          </div>
+        </div>
+      </ng-template>
+    </li> -->
+    <!-- OAQ Settings -->
+    <li [ngbNavItem]="9">
+      <a ngbNavLink>OAQ Settings</a>
+
+      <ng-template ngbNavContent>
+        <div style="padding: 5px; display: flex; flex-direction: row; gap: 10px;">
+
+          <div style="display: flex; flex-direction: column; gap: 5px;
+                      align-items: center; width: 100%;">
+
+            <mat-card-title class="p-10" style="color: #2565AE;">
+              Outdoor Air Quality
+            </mat-card-title>
+
+            <mat-radio-group id="radio-button" [value]="oaqSelection" (change)="onOaqOptionSelected($event.value)">
+
+              <mat-radio-button style="font-weight: 550; font-size: 16px;" value="API">
+                API
+              </mat-radio-button>
+
+              <mat-radio-button style="font-weight: 550; font-size: 16px;" value="Sensor">
+                Sensor
+              </mat-radio-button>
+
+            </mat-radio-group>
+
+            <div *ngIf="oaqSelection === 'Sensor' && oaqDeviceId"
+              style="margin-top: 10px; font-weight: 600; color: #2565AE;">
+
+              Device ID: {{ oaqDeviceId }}
+
+            </div>
+
+            <div style="margin-top: 17px; height: 30px;
+                    display: flex; gap: 17px;" class="subrow">
+
+              <button mat-raised-button disableOneSec class="bg-success" type="button" style="line-height: 10px;"
+                (click)="changeOAQType(oaqSelection, oaqDeviceId)">
+                Update
+              </button>
+
+              <button mat-raised-button class="bg-failed" type="button" style="line-height: 10px;">
+                Cancel
+              </button>
+
+            </div>
+
           </div>
         </div>
       </ng-template>

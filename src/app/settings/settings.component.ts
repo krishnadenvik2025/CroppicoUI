@@ -109,6 +109,7 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.getSettings();
     this.getVersion();
     this.getWifiNames();
+    this.getOAQMode();
 
     setTimeout(() => {
       this.systemScreen(1);
@@ -558,9 +559,36 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
     await this.httpPost(APIS.SCREEN_SAVER, obj);
     console.log("after api call")
   }
+  changeOAQType(mode: '' | 'API' | 'Sensor', id: string) {
+    if (!mode) {
+      return;
+    }
 
+    const payload = {
+      mode: mode.toLowerCase(),
+      device_id: mode === 'Sensor' ? id : null
+    };
+
+    this.httpPost('/aqi/outdoor/mode', payload);
+  }
+
+  getOAQMode() {
+    this.http.get('/aqi/outdoor/mode').subscribe((res: any) => {
+
+      if (res.mode === 'sensor') {
+        this.oaqSelection = 'Sensor';
+        this.oaqDeviceId = res.device_id || '';
+      } else {
+        this.oaqSelection = 'API';
+        this.oaqDeviceId = '';
+      }
+
+    });
+  }
   onOaqOptionSelected(option: 'API' | 'Sensor') {
+
     if (option === 'Sensor') {
+
       const config: MatDialogConfig = {
         panelClass: "dialog-responsive",
         disableClose: true,
@@ -574,15 +602,25 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
       };
 
       const dialog = this.dialog.open(AuthComponent, config);
+
       dialog.afterClosed().subscribe((res) => {
+
         if (res?.oaqDeviceId) {
-          this.oaqSelection = option;
+          this.oaqSelection = 'Sensor';
           this.oaqDeviceId = res.oaqDeviceId;
+        } else {
+          // Keep previous selection if authentication is cancelled
+          this.oaqSelection = 'API';
+          this.oaqDeviceId = '';
         }
+
       });
+
     } else {
-      this.oaqSelection = option;
+
+      this.oaqSelection = 'API';
       this.oaqDeviceId = '';
+
     }
   }
 

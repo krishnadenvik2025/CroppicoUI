@@ -13,7 +13,6 @@ export class InfoComponent implements OnInit {
     "irrigation_state", "water_level", "water_flow", "supp_ec_a", "supp_ec_b", "supp_ph_inc", "supp_ph_dec", "light_stat", "light_brightness",
     "water_temperature", "ambient_temp", "ambient_humid", "error"]
 
-
   constructor() {
   }
 
@@ -41,7 +40,7 @@ export class InfoComponent implements OnInit {
       }
       this.infoData = [];
       this.infoData = obj;
-      console.log("INFODARA",this.infoData)
+      console.log("INFODARA", this.infoData)
     }
 
   }
