@@ -1,9 +1,9 @@
 from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
+import db_checker
 from slave_controller_esg import SlaveController
 from datetime import datetime, timedelta
 import subprocess, re, sqlite3, json, socket, constants, os, time, requests
-import sen66
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 160 * 1024 * 1024
@@ -11,11 +11,7 @@ CORS(app)
 device_id = constants.getserial()
 master_version = 1.99
 
-#for OAQ
-API_KEY = '9f6287775e5e7cbc01e8281c41f81354'
-BASE_URL = 'https://api.openweathermap.org/data/2.5/air_pollution'
 db_path = '/home/pi/croppico-api-new/sensor_data.db'
-INTERFACE = "wlan0"
 WPA_CONF = "/etc/wpa_supplicant/wpa_supplicant.conf"
 slave = SlaveController(device_id)
 
@@ -33,7 +29,7 @@ def get_local_ip():
     except Exception:
         return "Not Connected"
 
-def connect_open_wifi(ssid, interface=INTERFACE):
+def connect_open_wifi(ssid, interface="wlan0"):
     try:
         conf_block = f'\nnetwork={{\n\tssid="{ssid}"\n\tkey_mgmt=NONE\n}}\n'
 
@@ -417,19 +413,7 @@ def wificonnect():
 
         if not ssid:
             return jsonify({"res": False})
-
-        # if not pwd:  #NOT WORKINGG....
-        #     print("Connecting to OPEN WiFi...")
-        #     c = subprocess.run(
-        #         [ "sudo", "nmcli", "device", "wifi", "connect", ssid, "ifname", "wlan0"],
-        #         capture_output=True,
-        #         text=True,
-        #         timeout=30
-        #     )
-        #     if c.returncode != 0:
-        #         return jsonify({"res": False})
-        #     return jsonify({"res": True})
-        
+        #New
         if not pwd: #Working
             print("Connecting to OPEN WiFi...")
             success = connect_open_wifi(ssid)
@@ -445,174 +429,6 @@ def wificonnect():
         return {'res': False}
     return {'res': True}
     
-#New
-@app.route('/aqi/indoor', methods=["GET"])
-def indoor_aqi():
-    try:
-        conn = get_db_connection()
-        res = conn.execute(
-            'SELECT aqi, temp, hump, co2, voc, pm2_5, timestamp '
-            'FROM indoor_aqi ORDER BY id DESC LIMIT 1').fetchone()
-        conn.close()    
-        if res is None:
-            return jsonify({"error": "No data yet"}), 404
-        keys = ['aqi', 'temp', 'hum', 'co2', 'voc', 'pm2p5', 'timestamp']
-        return jsonify(dict(zip(keys, res)))
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-#New
-@app.route('/aqi/outdoor', methods=["GET"])
-def outdoor_aqi():
-    try:
-        with sqlite3.connect(db_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT mode FROM oaq")
-            row = cursor.fetchone()
-            if row is None:
-                return jsonify({"error": "No mode set"}), 404
-            mode = row[0]
-
-        if mode == "sensor":
-            with sqlite3.connect(db_path) as conn:
-                cursor = conn.cursor()
-                cursor.execute(
-                    'SELECT aqi, temp, hum, co2, voc, pm2_5, timestamp '
-                    'FROM outdoor_aqi ORDER BY id DESC LIMIT 1'
-                )
-                res = cursor.fetchone()
-            if res is None:
-                return jsonify({"error": "No data yet"}), 404
-            keys = ['aqi', 'temp', 'hum', 'co2', 'voc', 'pm2p5', 'timestamp']
-            res_dict = dict(zip(keys, res))
-            res_dict["outdoor_mode"] = int(1)
-            return jsonify(res_dict)
-
-        elif mode == "api":
-            with sqlite3.connect(db_path) as conn:
-                cursor = conn.cursor()
-                cursor.execute(
-                    'SELECT aqi, pm2p5, no2, so2, o3, pm10, nh3, co2, timestamp '
-                    'FROM outdoor_aqi ORDER BY id DESC LIMIT 1'
-                )
-                res = cursor.fetchone()
-            if res is None:
-                return jsonify({"error": "No data yet"}), 404
-            keys = ['aqi','pm2p5', 'no2', 'so2', 'o3', 'pm10', 'nh3', 'co2', 'timestamp']
-            dat = dict(zip(keys, res))
-            return jsonify({
-                "outdoor_mode": int(2),
-                "aqi": dat.get("aqi"),
-                "pm2p5": dat.get("pm2p5"),
-                "pm10": dat.get("pm10"),
-                "o3": dat.get("o3"),
-                "no2": dat.get("no2"),
-                "so2": dat.get("so2"),
-                "co": dat.get("co2"),
-                "nh3":dat.get("nh3")
-            })
-
-        return jsonify({"error": "Unknown mode"}), 400
-    except Exception as e:
-        print(f"Error reading OAQ: {type(e)} - {e}")
-        return jsonify({"error": "OAQ read failed"}), 500
-
-#New
-@app.route('/aqi/outdoor/mode', methods=["POST"])
-def set_outdoor_aqi_mode():
-    try:
-        data = request.get_json() or {}
-        mode = data.get("mode")
-        device_id = data.get("device_id") or data.get("deviceid")
-        lat = data.get("lat") or data.get("latitude")
-        long = data.get("long") or data.get("longitude") or data.get("lon")
-
-        if not mode or mode not in ("api", "sensor"):
-            return jsonify({"error": "Invalid mode. Use 'api' or 'sensor'"}), 400
-
-        if mode == "sensor" and not device_id:
-            return jsonify({"error": "Device ID is required for sensor mode"}), 400
-
-        if mode == "api" and (lat is None or long is None):
-            return jsonify({"error": "Latitude and longitude are required for api mode"}), 400
-
-        with sqlite3.connect(db_path) as conn:
-            if mode == "sensor":
-                conn.execute("UPDATE oaq SET mode = ?, device_id = ?", (mode, str(device_id).strip()))
-            else:
-                conn.execute("UPDATE oaq SET mode = ?, latitude = ?, longitude = ?", (mode, str(lat).strip(), str(long).strip()))
-            conn.commit()
-
-        return jsonify({
-            "result": True,
-            "mode": mode,
-            "device_id": str(device_id).strip() if mode == "sensor" else None,
-            "latitude": str(lat).strip() if mode == "api" else None,
-            "longitude": str(long).strip() if mode == "api" else None,
-            "lat": str(lat).strip() if mode == "api" else None,
-            "long": str(long).strip() if mode == "api" else None
-        })
-    except Exception as e:
-        print(f"Error setting outdoor AQI mode: {type(e)} - {e}")
-        return jsonify({"error": "Failed to set outdoor AQI mode"}), 500
-    
-#New  
-@app.route('/aqi/outdoor/mode', methods=["GET"])
-def get_outdoor_aqi_mode():
-    try:
-        with sqlite3.connect(db_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT mode, device_id, latitude, longitude FROM oaq LIMIT 1")
-            row = cursor.fetchone()
-
-            if row is None:
-                return jsonify({"error": "No mode set"}), 404
-
-            mode = row[0]
-            device_id = row[1]
-            latitude = row[2] if len(row) > 2 and row[2] is not None else None
-            longitude = row[3] if len(row) > 3 and row[3] is not None else None
-
-        return jsonify({"mode": mode, "device_id": device_id, "latitude": latitude,
-            "longitude": longitude,"lat": latitude, "long": longitude})
-
-    except Exception as e:
-        print(f"Error getting outdoor AQI mode: {type(e)} - {e}")
-        return jsonify({"error": "Failed to get outdoor AQI mode"}), 500
-
-#New
-@app.route('/esg/data', methods=['GET'])
-def esg_data():
-    try:
-        today = datetime.now()
-        cur_1st = today.replace(day=1)
-        prev_last_day = cur_1st - timedelta(days=1)
-        prev_first_day = prev_last_day.replace(day=1)
-        start_date = prev_first_day.strftime("%Y-%m-%d")
-        end_date = prev_last_day.strftime("%Y-%m-%d")
-        print(f"Fetching ESG data from {start_date} to {end_date}")
-        conn = get_db_connection()
-        cum_result = conn.execute("""SELECT cum_water_saved AS cum_water_saved, cum_miles_saved AS cum_miles_avoided, 
-            cum_plastic_avoided AS cum_plastic_avoided, cum_total_yeild AS cum_yeild, cum_power_saved AS cum_energy_saved
-            FROM esg_summary ORDER BY id DESC LIMIT 1""").fetchone()
-        result = conn.execute("""SELECT sum(water_saved) AS water_saved, sum(miles_saved) AS miles_avoided, 
-            sum(plastic_avoided) AS plastic_avoided, sum(total_yeild) AS yeild, sum(power_saved) AS energy_saved 
-            FROM esg_summary WHERE DATE(end_date) BETWEEN ? AND ?""", (start_date, end_date)).fetchone()
-        conn.close()
-        return jsonify({"water_saved": result["water_saved"] or 0,
-            "plastic_avoided": result["plastic_avoided"] or 0,
-            "miles_avoided": result["miles_avoided"] or 0,
-            "yield": result["yeild"] or 0,
-            "energy_saved": result["energy_saved"] or 0,
-            "total_water_saved": cum_result["cum_water_saved"] or 0,
-            "total_plastic_avoided": cum_result["cum_plastic_avoided"] or 0,
-            "total_miles_avoided": cum_result["cum_miles_avoided"] or 0,
-            "total_yield": cum_result["cum_yeild"] or 0,
-            "total_energy_saved": cum_result["cum_energy_saved"] or 0})
-    except Exception as e:
-        print(f"Error fetching ESG data: {type(e)} – {e}")
-        return jsonify({"error": "Failed to fetch ESG data"}), 500
-
 #New
 @app.route("/settings/light", methods=["POST"])
 def set_light_settings():
@@ -634,6 +450,6 @@ def set_light_settings():
 
 if __name__ == '__main__':
     slave.start()
-    sen66.start_aqi_calc()
+    db_checker.start_aqi_calc()
     app.run(port=14999, host="0.0.0.0") 
 

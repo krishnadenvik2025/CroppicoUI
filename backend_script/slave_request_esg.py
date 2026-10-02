@@ -208,14 +208,6 @@ class Settings:
         return "00,02,10"
     
     @staticmethod
-    def EndCycle():
-        return "00,02,11"
-    
-    @staticmethod
-    def startCycle():
-        return "00,02,12"
-    
-    @staticmethod
     def waterpas(mode):
         return "00,02,13," + str(mode)
     

@@ -345,9 +345,7 @@
     <li [ngbNavItem]="7">
       <a ngbNavLink>Calibration</a>
       <ng-template ngbNavContent>
-
         <div style="display: flex;justify-content: center;margin-top: 10px;">
-
           <mat-card class="mat-elevation-z3">
             <mat-card-title class="header-bg p-10">Sensor Calibration</mat-card-title>
             <div class="p-10 align-row m-t-12">
@@ -355,28 +353,9 @@
                 (click)="openCalibarionPopup(1,'ph','SENSOR')">PH</button>
               <button class="button-class" mat-raised-button color="primary"
                 (click)="openCalibarionPopup(2,'ec','SENSOR')">EC</button>
-              <!-- <button class="button-class" mat-raised-button color="primary"
-                (click)="openCalibarionPopup(3,'flow_sensor','PUMP')">Flow Sensor</button> -->
             </div>
-
           </mat-card>
-          <!-- <mat-card class="mat-elevation-z3">
-            <mat-card-title class="header-bg p-10">Pump Calibration</mat-card-title>
-            <div class="p-10 align-row m-t-12">
-              <button class="button-class" mat-raised-button color="primary"
-                (click)="openCalibarionPopup(1,'ec_a_pump','PUMP')">EC
-                A PUMP</button>
-              <button class="button-class" mat-raised-button color="primary"
-                (click)="openCalibarionPopup(2,'ec_b_pump','PUMP')">EC
-                B PUMP</button>
-            </div>
-          </mat-card> -->
         </div>
-
-
-        <!-- <button mat-raised-button color="primary">Sensor Calibration</button>
-          <button mat-raised-button color="primary">Pump Calibration</button> -->
-
       </ng-template>
     </li>
 
@@ -461,127 +440,50 @@
             </div>
           </form>
         </div>
-
       </ng-template>
     </li>
 
-    <!-- OAQ Settings
-    <li [ngbNavItem]="9">
-      <a ngbNavLink>OAQ Settings</a>
-      <ng-template ngbNavContent>
-        <div style="padding: 5px; display: flex; flex-direction: row; gap: 10px;">
-          <div style="display: flex;flex-direction: column;gap: 5px;align-items: center;width: 100%;">
-            <mat-card-title class="p-10" style="color: #2565AE;">Outdoor Air Quality </mat-card-title>
-            <mat-radio-group id="radio-button" [value]="oaqSelection" (change)="onOaqOptionSelected($event.value)">
-              <mat-radio-button style="font-weight: 550;font-size: 16px;" value="API">API</mat-radio-button>
-              <mat-radio-button style="font-weight: 550;font-size: 16px;" value="Sensor">Sensor</mat-radio-button>
-            </mat-radio-group>
-            <div *ngIf="oaqSelection === 'Sensor' && oaqDeviceId"
-              style="margin-top: 10px; font-weight: 600; color: #2565AE;">
-              Device ID: {{ oaqDeviceId }}
+    <!-- Light Settings -->
+    <!-- <li [ngbNavItem]="9">
+      <a ngbNavLink>Light Settings</a>
+      <form style="justify-content: initial;" #lightSettings="ngForm">
+        <mat-card-title style="background-color: transparent;border: none;" class="header-bg p-10">Light
+          Settings</mat-card-title>
+        <div style="display: flex;gap: 10px;">
+          <div class="align-column">
+            <div class="space">
+              <span> ON Hour (0-24) : </span>
+              <input type="number" name='on_hour' [(ngModel)]="lightSet.on_hour"
+                (click)="open(lightSettings,'on_hour')">
             </div>
-            <div style="margin-top: 17px;height: 30px;display: flex;gap: 17px;" class="subrow">
-              <button style="line-height: 10px;" mat-raised-button disableOneSec class="bg-success" type="submit"
-                value="Update" (click)="changeOAQType(oaqSelection,oaqDeviceId)">Update</button>
-              <button mat-raised-button style="line-height: 10px;" class="bg-failed">Cancel</button>
+            <div class="space">
+              <span> ON Min (0-59) : </span>
+              <input type="number" name='on_min' [(ngModel)]="lightSet.on_min"
+                (click)="open(lightSettings,'on_min')">
+            </div>
+          </div>
+
+          <div class="align-column">
+            <div class="space">
+              <span> OFF Hour (0-24) : </span>
+              <input type="number" name='off_hour' [(ngModel)]="lightSet.off_hour"
+                (click)="open(lightSettings,'off_hour')">
+            </div>
+            <div class="space">
+              <span> OFF Min (0-59):</span>
+              <input type="number" name='off_min' [(ngModel)]="lightSet.off_min"
+                (click)="open(lightSettings,'off_min')">
             </div>
           </div>
         </div>
-      </ng-template>
+
+        <div style="margin-right: 4.3rem;height: 30px;width: 45%;" class="subrow"><button style="line-height: 10px;"
+            mat-raised-button disableOneSec class="bg-success" (click)="updateLightSettings(lightSettings)"
+            value="Update">Update</button>
+          <button mat-raised-button style="line-height: 10px;" class="bg-failed">Cancel</button>
+        </div>
+      </form>
     </li> -->
-    <!-- OAQ Settings -->
-    <li [ngbNavItem]="9">
-      <a ngbNavLink>OAQ Settings</a>
-
-      <ng-template ngbNavContent>
-        <div style="padding: 10px; display: flex; flex-direction: column; align-items: center; width: 100%;">
-
-          <mat-card-title class="p-10" style="color: #2565AE; font-size: 14px; font-weight: 600;">
-            Outdoor Air Quality (OAQ) Source
-          </mat-card-title>
-
-          <mat-radio-group id="radio-button" [value]="oaqSelection" (change)="onOaqOptionSelected($event.value)"
-            style="display: flex; gap: 35px; margin: 10px 0;">
-            <mat-radio-button style="font-weight: 550; font-size: 12px;" value="API">
-              Weathermap API
-            </mat-radio-button>
-            <mat-radio-button style="font-weight: 550; font-size: 12px;" value="Sensor">
-              Remote Sensor
-            </mat-radio-button>
-          </mat-radio-group>
-
-          <!-- Sensor Mode: Show Device ID & Change Button -->
-          <div *ngIf="oaqSelection === 'Sensor'"
-            style=" display: flex; flex-direction: column; align-items: center; gap: 8px;">
-            <div
-              style="font-weight: 600; color: #2565AE; font-size: 12px; display: flex; align-items: center; gap: 12px;">
-              <span>Device ID: {{ oaqDeviceId || 'None' }}</span>
-              <button mat-stroked-button color="primary" type="button"
-                style="line-height: 26px; height: 28px; font-size: 10px;" (click)="openSensorDeviceDialog()">
-                {{ oaqDeviceId ? 'Change ID' : 'Set ID' }}
-              </button>
-            </div>
-            <div *ngIf="!oaqDeviceId" style="color: #d9534f; font-size: 13px;">
-              * A valid Device ID is required for sensor mode
-            </div>
-          </div>
-
-          <!-- API Mode: Input Fields for Latitude and Longitude -->
-          <div *ngIf="oaqSelection === 'API'"
-            style="margin-top: 5px; display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; max-width: 650px;">
-            <div style="display: flex; gap: 5px; width: 100%; justify-content: center;">
-
-              <!-- Latitude -->
-              <div style="display: flex; flex-direction: row; gap: 4px; width: 220px;">
-                <label style="font-weight: 600; color: #050505; font-size: 15px; margin-top: 5px;">Latitude: </label>
-                <div
-                  style="display: flex; align-items: center; border: 1px solid #ced4da; border-radius: 4px; padding: 4px 8px; background: #ffffff;">
-                  <input type="text" class="oaq-input" [(ngModel)]="lat" (click)="openKeypadFor('lat')" placeholder="e.g. 12.93693"
-                    style="border: none; outline: none; width: 100%; font-size: 12px; font-weight: 500;" />
-                  <span (click)="openKeypadFor('lat')" title="Open Keypad"
-                    style="cursor: pointer; font-size: 12px; margin-left: 5px;"></span>
-                </div>
-              </div>
-
-              <!-- Longitude -->
-              <div style="display: flex; flex-direction: row; gap: 4px; width: 220px;">
-                <label style="font-weight: 600; color: #080808; font-size: 15px; margin-top: 5px;">Longitude: </label>
-                <div
-                  style="display: flex; align-items: center; border: 1px solid #ced4da; border-radius: 4px; padding: 4px 8px; background: #ffffff;">
-                  <input type="text" class="oaq-input" [(ngModel)]="long" (click)="openKeypadFor('long')" placeholder="e.g. 80.23578"
-                    style="border: none; outline: none; width: 100%; font-size: 12px; font-weight: 500;" />
-                  <span (click)="openKeypadFor('long')" title="Open Keypad"
-                    style="cursor: pointer; font-size: 12px; margin-left: 5px;"></span>
-                </div>
-              </div>
-
-            </div>
-
-            <div *ngIf="!lat || !long" style="color: #d9534f; font-size: 10px;">
-              * Both Latitude and Longitude are required for Weather API mode
-            </div>
-          </div>
-
-          <!-- Action Buttons -->
-          <div style="margin-top: 10px; height: 32px; display: flex; gap: 17px;" class="subrow">
-            <button mat-raised-button disableOneSec class="bg-success" type="button" style="line-height: 10px;"
-              (click)="changeOAQType(oaqSelection, oaqDeviceId)">
-              Update
-            </button>
-            <button mat-raised-button class="bg-failed" type="button" style="line-height: 10px;" (click)="cancelOAQ()">
-              Cancel
-            </button>
-          </div>
-
-          <!-- Feedback Status Message -->
-          <div *ngIf="oaqStatusMessage" style="margin-top: 10px; font-size: 14px; font-weight: 600;"
-            [style.color]="oaqStatusSuccess ? '#28a745' : '#dc3545'">
-            {{ oaqStatusMessage }}
-          </div>
-
-        </div>
-      </ng-template>
-    </li>
   </ul>
   <div [ngbNavOutlet]="nav" class="mt-2"></div>
 </div>

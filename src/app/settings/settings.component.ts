@@ -1,28 +1,10 @@
-import {
-  HttpClient
-} from '@angular/common/http';
-import {
-  AfterViewInit,
-  Component,
-  EventEmitter,
-  Input,
-  OnDestroy,
-  OnInit,
-  Output
-} from '@angular/core';
-import {
-  FormControl,
-  NgForm
-} from '@angular/forms';
-import {
-  NgbModal
-} from '@ng-bootstrap/ng-bootstrap';
-import {
-  environment
-} from 'src/environments/environment';
-import {
-  KeypadComponent
-} from '../keypad/keypad.component';
+import {HttpClient} from '@angular/common/http';
+import {AfterViewInit, Component, EventEmitter, Input,
+  OnDestroy, OnInit, Output} from '@angular/core';
+import {FormControl, NgForm} from '@angular/forms';
+import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {environment} from 'src/environments/environment';
+import {KeypadComponent} from '../keypad/keypad.component';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { CalibrationDialogComponent } from 'src/shared/component/calibration-dialog/calibration-dialog.component';
 import { AuthComponent } from 'src/shared/component/auth/auth.component';
@@ -93,12 +75,6 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
   systemFormControl = new FormControl('');
   screenSaverFormControl = new FormControl(false);
   @Output() screenSaverData: any = new EventEmitter();
-  oaqSelection: 'API' | 'Sensor' | '' = '';
-  oaqDeviceId: string = '';
-  lat: string = '';
-  long: string = '';
-  oaqStatusMessage: string = '';
-  oaqStatusSuccess: boolean = false;
 
   constructor(private modalService: NgbModal,
     private http: HttpClient,
@@ -108,14 +84,12 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-
   }
 
   ngOnInit(): void {
     this.getSettings();
     this.getVersion();
     this.getWifiNames();
-    this.getOAQMode();
 
     setTimeout(() => {
       this.systemScreen(1);
@@ -534,14 +508,12 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   handleWifiClick(wifi: any) {
-
     if (wifi.security === 'OPEN') {
       // Directly connect without password
       this.connectToWifi(wifi.ssid, '');
     } else {
       this.openWifiPasswordField(wifi.ssid);
     }
-
   }
 
   openWifiPasswordField(ssid: any) {
@@ -566,9 +538,7 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
       if (res) {
         this.connectToWifi(ssid, res.password);
       }
-
     });
-
   }
 
   async sendScreenSaverData(data: NgForm) {
@@ -578,167 +548,11 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
     await this.httpPost(APIS.SCREEN_SAVER, obj);
     console.log("after api call")
   }
-  async changeOAQType(mode: '' | 'API' | 'Sensor', id: string) {
-    if (!mode) {
-      this.oaqStatusSuccess = false;
-      this.oaqStatusMessage = 'Please select either API or Sensor mode.';
-      return;
-    }
-
-    if (mode === 'Sensor') {
-      if (!id || !id.trim()) {
-        this.oaqStatusSuccess = false;
-        this.oaqStatusMessage = 'Please provide a valid Device ID for sensor mode.';
-        return;
-      }
-    } else if (mode === 'API') {
-      const latVal = String(this.lat || '').trim();
-      const longVal = String(this.long || '').trim();
-      if (!latVal || !longVal || isNaN(Number(latVal)) || isNaN(Number(longVal))) {
-        this.oaqStatusSuccess = false;
-        this.oaqStatusMessage = 'Please enter valid numbers for Latitude and Longitude.';
-        return;
-      }
-      const latNum = Number(latVal);
-      const longNum = Number(longVal);
-      if (latNum < -90 || latNum > 90 || longNum < -180 || longNum > 180) {
-        this.oaqStatusSuccess = false;
-        this.oaqStatusMessage = 'Latitude must be between -90 and 90, Longitude between -180 and 180.';
-        return;
-      }
-    }
-
-    const payload: any = {
-      mode: mode.toLowerCase()
-    };
-
-    if (mode === 'Sensor') {
-      payload.device_id = id.trim();
-      payload.deviceid = id.trim();
-    } else {
-      payload.lat = String(this.lat).trim();
-      payload.long = String(this.long).trim();
-      payload.latitude = String(this.lat).trim();
-      payload.longitude = String(this.long).trim();
-    }
-
-    console.log("Sending OAQ configuration:", payload);
-    const result: any = await this.httpPost('aqi/outdoor/mode', payload);
-    if (result && (result.result || result.mode)) {
-      this.oaqStatusSuccess = true;
-      this.oaqStatusMessage = 'Outdoor AQI settings saved successfully!';
-      setTimeout(() => {
-        this.oaqStatusMessage = '';
-      }, 4000);
-    } else {
-      this.oaqStatusSuccess = false;
-      this.oaqStatusMessage = 'Failed to save Outdoor AQI settings. Please check backend.';
-    }
-    this.getOAQMode();
-  }
-
-  getOAQMode() {
-    this.http.get(this.url + '/aqi/outdoor/mode').subscribe((res: any) => {
-      console.log("Fetched OAQ Mode:", res);
-      if (res && res.mode === 'sensor') {
-        this.oaqSelection = 'Sensor';
-        this.oaqDeviceId = res.device_id || '';
-      } else if (res && res.mode === 'api') {
-        this.oaqSelection = 'API';
-        this.lat = res.latitude ?? (res.lat ? String(res.lat) : (this.lat || '12.93693'));
-        this.long = res.longitude ?? (res.long ? String(res.long) : (this.long || '80.23578'));
-      }
-    }, error => {
-      console.error("Error fetching OAQ mode:", error);
-    });
-  }
-
-  onOaqOptionSelected(option: 'API' | 'Sensor') {
-    this.oaqSelection = option;
-    this.oaqStatusMessage = '';
-
-    if (option === 'Sensor') {
-      if (!this.oaqDeviceId) {
-        this.openSensorDeviceDialog();
-      }
-    } else if (option === 'API') {
-      if (!this.lat && !this.long) {
-        this.lat = '12.93693';
-        this.long = '80.23578';
-      }
-    }
-  }
-
-  openSensorDeviceDialog() {
-    const config: MatDialogConfig = {
-      panelClass: "dialog-responsive",
-      disableClose: true,
-      height: '220px',
-      position: {
-        top: "10px"
-      },
-      data: {
-        module: 'oaq'
-      }
-    };
-
-    const dialog = this.dialog.open(AuthComponent, config);
-
-    dialog.afterClosed().subscribe((res) => {
-      if (res?.oaqDeviceId) {
-        this.oaqSelection = 'Sensor';
-        this.oaqDeviceId = res.oaqDeviceId;
-        this.oaqStatusMessage = '';
-      }
-    });
-  }
-
-  openKeypadFor(field: 'lat' | 'long') {
-    const modalRef = this.modalService.open(KeypadComponent, {
-      size: 'sm',
-      backdrop: 'static',
-      centered: true,
-      scrollable: false
-    });
-    modalRef.componentInstance.defVal = field === 'lat' ? (this.lat || '') : (this.long || '');
-    modalRef.componentInstance.passEntry.subscribe((receivedEntry: any) => {
-      const valStr = String(receivedEntry ?? '').trim();
-      const num = Number(valStr);
-      if (!isNaN(num)) {
-        if (field === 'lat') {
-          if (num >= -90 && num <= 90) {
-            this.lat = valStr;
-            this.oaqStatusMessage = '';
-          } else {
-            this.oaqStatusSuccess = false;
-            this.oaqStatusMessage = 'Latitude must be between -90 and 90';
-          }
-        } else if (field === 'long') {
-          if (num >= -180 && num <= 180) {
-            this.long = valStr;
-            this.oaqStatusMessage = '';
-          } else {
-            this.oaqStatusSuccess = false;
-            this.oaqStatusMessage = 'Longitude must be between -180 and 180';
-          }
-        }
-      }
-      modalRef.close();
-    });
-  }
-
-  cancelOAQ() {
-    this.oaqStatusMessage = '';
-    this.getOAQMode();
-  }
 
   ngOnDestroy(): void {
-    setTimeout(() => {
-      this.systemScreen(2);
-    }, 100);
-
     if (this.intervalId) {
       clearInterval(this.intervalId);
     }
   }
+
 }

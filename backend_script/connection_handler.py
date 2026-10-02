@@ -20,28 +20,28 @@ def check_internet(timeout=3):
     print("internet is not available")
     return False
 
-def getOAQdetails():
-    default = {"mode": None, "device_id": None}
-    try:
-        conn = sqlite3.connect(db_path)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM oaq")
-        row = cursor.fetchone()
-        conn.close()
-        print(f"OAQ details fetched: {dict(row) if row else None}")
-        if row:
-            return {"mode": row["mode"], "device_id": row["device_id"]}
-        return default
-    except Exception as e:
-        print(f"getOAQdetails error: {e}")
-        return default
+# def getOAQdetails():
+#     default = {"mode": None, "device_id": None}
+#     try:
+#         conn = sqlite3.connect(db_path)
+#         conn.row_factory = sqlite3.Row
+#         cursor = conn.cursor()
+#         cursor.execute("SELECT * FROM oaq")
+#         row = cursor.fetchone()
+#         conn.close()
+#         print(f"OAQ details fetched: {dict(row) if row else None}")
+#         if row:
+#             return {"mode": row["mode"], "device_id": row["device_id"]}
+#         return default
+#     except Exception as e:
+#         print(f"getOAQdetails error: {e}")
+#         return default
 
 class ConnectionHandler:
     def __init__(self, device_id):
         self.client = mqtt.Client()
         self.device_id = device_id
-        self.OAQdetails = getOAQdetails()
+        # self.OAQdetails = getOAQdetails()
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
         if logToFile:
@@ -60,11 +60,11 @@ class ConnectionHandler:
             self.client.connected_flag = True  # set flag
             print("Connected OK")
             self.client.subscribe("server/" + self.device_id + "/#")
-            self.client.subscribe(topic="croppico/" + self.device_id + "/EndBatch")
-            self.client.subscribe(topic="croppico/" + self.device_id + "/StartBatch")
-            self.client.subscribe(topic="croppico/" + self.device_id + "/oaq")
-            if self.OAQdetails and self.OAQdetails.get('mode') == "sensor" and self.OAQdetails.get('device_id'):
-                self.client.subscribe(topic="croppico/" + self.OAQdetails['device_id'] + "/oaq")
+            # self.client.subscribe(topic="croppico/" + self.device_id + "/EndBatch")
+            # self.client.subscribe(topic="croppico/" + self.device_id + "/StartBatch")
+            # self.client.subscribe(topic="croppico/" + self.device_id + "/oaq")
+            # if self.OAQdetails and self.OAQdetails.get('mode') == "sensor" and self.OAQdetails.get('device_id'):
+            #     self.client.subscribe(topic="croppico/" + self.OAQdetails['device_id'] + "/oaq")
 #            self.client.subscribe("server/0000000032d7ed1a/#")
 
     def on_message(self, client, userdata, msg):

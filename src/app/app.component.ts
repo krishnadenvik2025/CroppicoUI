@@ -36,29 +36,6 @@ export class AppComponent implements OnInit, OnChanges {
   show_info_screen: boolean = false;
   prevent_toggle: boolean = false;
   allData: any;
-  ESGData: any;
-  IAQ: any;
-  OAQ: any;
-  outdoorMode: number = 0;
-  currentFooterIndex: number = 0;
-  footerInterval: any;
-  footerVisible = true;
-  footerMessages: any = {
-    1: [
-      "Homie's 72 plants are actively absorbing CO₂ and releasing fresh oxygen.",
-      "Your indoor garden is improving air quality every day.",
-      "Plants naturally help regulate humidity levels.",
-      "Green spaces contribute to a healthier workspace.",
-      "Indoor plants can help reduce stress and improve wellbeing."
-    ],
-    2: [
-      "Aligning your workspace with UN Sustainable Development Goals 2, 12, and 13.",
-      "Supporting sustainable consumption and production practices.",
-      "Reducing environmental impact through smart monitoring.",
-      "Creating awareness about indoor environmental quality.",
-      "Building healthier and greener workplaces."
-    ]
-  };
   brightness_level: number = 5;
   light_last_updated: number = 0;
   disable_brightness_slider: boolean = false;
@@ -151,18 +128,14 @@ export class AppComponent implements OnInit, OnChanges {
       this.screenSaverStatus = res;
     })
     this.getSettings();
-    this.startFooterRotation();
     this.getData();
-    this.getesg();
-    this.getAQI();
+
     setInterval(() => {
       this.time = new Date();
     }, 1000);
     setInterval(() => {
       if (!this.show_settings_screen && !this.show_maintenance_screen) {
         this.getData();
-        this.getesg();
-        this.getAQI();
       }
     }, 20000);
   }
@@ -269,68 +242,6 @@ export class AppComponent implements OnInit, OnChanges {
     } else {
       console.log("Data Api error");
     }
-  }
-
-  async getesg() {
-    let esgdataapi: any = await new Promise((resolve, reject) => {
-      this.http.get<any[]>(this.url + "/esg/data").subscribe({
-        next: data => { resolve(data); },
-        error: error => { resolve(false); }
-      });
-    });
-    if (esgdataapi) {
-      this.ESGData = esgdataapi;
-    }
-  }
-
-  async getAQI() {
-    let IAQApiCallData: any = await new Promise((resolve, reject) => {
-      this.http.get<any[]>(this.url + "/aqi/indoor").subscribe({
-        next: data => {
-          resolve(data);
-        },
-        error: error => {
-          console.log(error);
-          resolve(false);
-        }
-      });
-    });
-    console.log("GET AQI", IAQApiCallData);
-    if (IAQApiCallData) {
-      this.IAQ = IAQApiCallData;
-    }
-    let OAQApiCallData: any = await new Promise((resolve, reject) => {
-      this.http.get<any[]>(this.url + "/aqi/outdoor").subscribe({
-        next: data => {
-          resolve(data);
-        },
-        error: error => {
-          console.log(error);
-          resolve(false);
-        }
-      });
-    });
-    console.log("GET OAQ", OAQApiCallData);
-    if (OAQApiCallData) {
-      this.OAQ = OAQApiCallData;
-      this.outdoorMode = this.OAQ?.outdoor_mode || 0;
-    }
-  }
-
-  startFooterRotation() {
-    this.footerInterval = setInterval(() => {
-      this.footerVisible = false;
-
-      setTimeout(() => {
-        const messages = this.footerMessages[this.currentMainScreen] || [];
-
-        if (messages.length) {
-          this.currentFooterIndex =
-            (this.currentFooterIndex + 1) % messages.length;
-        }
-        this.footerVisible = true;
-      }, 500);
-    }, 10000);
   }
 
   setWifiSignalImgFn = () => {
@@ -635,13 +546,6 @@ export class AppComponent implements OnInit, OnChanges {
         }
       });
     });
-  }
-  get currentFooterText(): string {
-    return (
-      this.footerMessages[this.currentMainScreen]?.[
-      this.currentFooterIndex
-      ] || ''
-    );
   }
 
   onInteraction(i: any) {
