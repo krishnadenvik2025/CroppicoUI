@@ -32,6 +32,14 @@ export class KeypadComponent implements OnInit {
         this.passEntry.emit(this.defVal);
         // this.activeModal.close(this.defVal);
         break;
+      case "-":
+      case "+/-":
+        if (this.value && this.value.startsWith('-')) {
+          this.value = this.value.substring(1);
+        } else {
+          this.value = '-' + (this.value || '');
+        }
+        break;
       case "Clear":
         if (this.value.length > 0) {
           this.value = '';

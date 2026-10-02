@@ -45,6 +45,8 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
   mActive = false;
   wifinamelist: any[] = [];
   curWifiName: string = "";
+  wifiConnectionStatus: 'idle' | 'connecting' | 'success' | 'failed' = 'idle';
+  wifiConnectingSsid: string = '';
   slaveVersion: any = "00.0";
   versionData: any;
   private intervalId: any;
@@ -93,6 +95,10 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
   @Output() screenSaverData: any = new EventEmitter();
   oaqSelection: 'API' | 'Sensor' | '' = '';
   oaqDeviceId: string = '';
+  lat: string = '';
+  long: string = '';
+  oaqStatusMessage: string = '';
+  oaqStatusSuccess: boolean = false;
 
   constructor(private modalService: NgbModal,
     private http: HttpClient,
@@ -492,8 +498,9 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   httpPost(method: string, body: any) {
     console.log("Http Post : ", method, body);
+    const endpoint = method.startsWith('/') ? method.substring(1) : method;
     return new Promise((resolve, reject) => {
-      this.http.post<any>(this.url + "/" + method, body).subscribe({
+      this.http.post<any>(this.url + "/" + endpoint, body).subscribe({
         next: data => {
           resolve(data);
           console.log("dataaaaa", data)
@@ -507,11 +514,23 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
     return true;
   }
 
-  connectToWifi(ssid: string, password: string) {
-    this.httpPost('system/connectwifi', {
+  async connectToWifi(ssid: string, password: string) {
+    this.wifiConnectingSsid = ssid;
+    this.wifiConnectionStatus = 'connecting';
+    const result = await this.httpPost('system/connectwifi', {
       "ssid": ssid,
       "pwd": password
     });
+    if (result) {
+      this.wifiConnectionStatus = 'success';
+      this.curWifiName = ssid;
+    } else {
+      this.wifiConnectionStatus = 'failed';
+    }
+    setTimeout(() => {
+      this.wifiConnectionStatus = 'idle';
+      this.wifiConnectingSsid = '';
+    }, 3000);
   }
 
   handleWifiClick(wifi: any) {
@@ -559,69 +578,158 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
     await this.httpPost(APIS.SCREEN_SAVER, obj);
     console.log("after api call")
   }
-  changeOAQType(mode: '' | 'API' | 'Sensor', id: string) {
+  async changeOAQType(mode: '' | 'API' | 'Sensor', id: string) {
     if (!mode) {
+      this.oaqStatusSuccess = false;
+      this.oaqStatusMessage = 'Please select either API or Sensor mode.';
       return;
     }
 
-    const payload = {
-      mode: mode.toLowerCase(),
-      device_id: mode === 'Sensor' ? id : null
+    if (mode === 'Sensor') {
+      if (!id || !id.trim()) {
+        this.oaqStatusSuccess = false;
+        this.oaqStatusMessage = 'Please provide a valid Device ID for sensor mode.';
+        return;
+      }
+    } else if (mode === 'API') {
+      const latVal = String(this.lat || '').trim();
+      const longVal = String(this.long || '').trim();
+      if (!latVal || !longVal || isNaN(Number(latVal)) || isNaN(Number(longVal))) {
+        this.oaqStatusSuccess = false;
+        this.oaqStatusMessage = 'Please enter valid numbers for Latitude and Longitude.';
+        return;
+      }
+      const latNum = Number(latVal);
+      const longNum = Number(longVal);
+      if (latNum < -90 || latNum > 90 || longNum < -180 || longNum > 180) {
+        this.oaqStatusSuccess = false;
+        this.oaqStatusMessage = 'Latitude must be between -90 and 90, Longitude between -180 and 180.';
+        return;
+      }
+    }
+
+    const payload: any = {
+      mode: mode.toLowerCase()
     };
 
-    this.httpPost('/aqi/outdoor/mode', payload);
+    if (mode === 'Sensor') {
+      payload.device_id = id.trim();
+      payload.deviceid = id.trim();
+    } else {
+      payload.lat = String(this.lat).trim();
+      payload.long = String(this.long).trim();
+      payload.latitude = String(this.lat).trim();
+      payload.longitude = String(this.long).trim();
+    }
+
+    console.log("Sending OAQ configuration:", payload);
+    const result: any = await this.httpPost('aqi/outdoor/mode', payload);
+    if (result && (result.result || result.mode)) {
+      this.oaqStatusSuccess = true;
+      this.oaqStatusMessage = 'Outdoor AQI settings saved successfully!';
+      setTimeout(() => {
+        this.oaqStatusMessage = '';
+      }, 4000);
+    } else {
+      this.oaqStatusSuccess = false;
+      this.oaqStatusMessage = 'Failed to save Outdoor AQI settings. Please check backend.';
+    }
+    this.getOAQMode();
   }
 
   getOAQMode() {
-    this.http.get('/aqi/outdoor/mode').subscribe((res: any) => {
-
-      if (res.mode === 'sensor') {
+    this.http.get(this.url + '/aqi/outdoor/mode').subscribe((res: any) => {
+      console.log("Fetched OAQ Mode:", res);
+      if (res && res.mode === 'sensor') {
         this.oaqSelection = 'Sensor';
         this.oaqDeviceId = res.device_id || '';
-      } else {
+      } else if (res && res.mode === 'api') {
         this.oaqSelection = 'API';
-        this.oaqDeviceId = '';
+        this.lat = res.latitude ?? (res.lat ? String(res.lat) : (this.lat || '12.93693'));
+        this.long = res.longitude ?? (res.long ? String(res.long) : (this.long || '80.23578'));
       }
-
+    }, error => {
+      console.error("Error fetching OAQ mode:", error);
     });
   }
+
   onOaqOptionSelected(option: 'API' | 'Sensor') {
+    this.oaqSelection = option;
+    this.oaqStatusMessage = '';
 
     if (option === 'Sensor') {
-
-      const config: MatDialogConfig = {
-        panelClass: "dialog-responsive",
-        disableClose: true,
-        height: '220px',
-        position: {
-          top: "10px"
-        },
-        data: {
-          module: 'oaq'
-        }
-      };
-
-      const dialog = this.dialog.open(AuthComponent, config);
-
-      dialog.afterClosed().subscribe((res) => {
-
-        if (res?.oaqDeviceId) {
-          this.oaqSelection = 'Sensor';
-          this.oaqDeviceId = res.oaqDeviceId;
-        } else {
-          // Keep previous selection if authentication is cancelled
-          this.oaqSelection = 'API';
-          this.oaqDeviceId = '';
-        }
-
-      });
-
-    } else {
-
-      this.oaqSelection = 'API';
-      this.oaqDeviceId = '';
-
+      if (!this.oaqDeviceId) {
+        this.openSensorDeviceDialog();
+      }
+    } else if (option === 'API') {
+      if (!this.lat && !this.long) {
+        this.lat = '12.93693';
+        this.long = '80.23578';
+      }
     }
+  }
+
+  openSensorDeviceDialog() {
+    const config: MatDialogConfig = {
+      panelClass: "dialog-responsive",
+      disableClose: true,
+      height: '220px',
+      position: {
+        top: "10px"
+      },
+      data: {
+        module: 'oaq'
+      }
+    };
+
+    const dialog = this.dialog.open(AuthComponent, config);
+
+    dialog.afterClosed().subscribe((res) => {
+      if (res?.oaqDeviceId) {
+        this.oaqSelection = 'Sensor';
+        this.oaqDeviceId = res.oaqDeviceId;
+        this.oaqStatusMessage = '';
+      }
+    });
+  }
+
+  openKeypadFor(field: 'lat' | 'long') {
+    const modalRef = this.modalService.open(KeypadComponent, {
+      size: 'sm',
+      backdrop: 'static',
+      centered: true,
+      scrollable: false
+    });
+    modalRef.componentInstance.defVal = field === 'lat' ? (this.lat || '') : (this.long || '');
+    modalRef.componentInstance.passEntry.subscribe((receivedEntry: any) => {
+      const valStr = String(receivedEntry ?? '').trim();
+      const num = Number(valStr);
+      if (!isNaN(num)) {
+        if (field === 'lat') {
+          if (num >= -90 && num <= 90) {
+            this.lat = valStr;
+            this.oaqStatusMessage = '';
+          } else {
+            this.oaqStatusSuccess = false;
+            this.oaqStatusMessage = 'Latitude must be between -90 and 90';
+          }
+        } else if (field === 'long') {
+          if (num >= -180 && num <= 180) {
+            this.long = valStr;
+            this.oaqStatusMessage = '';
+          } else {
+            this.oaqStatusSuccess = false;
+            this.oaqStatusMessage = 'Longitude must be between -180 and 180';
+          }
+        }
+      }
+      modalRef.close();
+    });
+  }
+
+  cancelOAQ() {
+    this.oaqStatusMessage = '';
+    this.getOAQMode();
   }
 
   ngOnDestroy(): void {

@@ -1,9 +1,8 @@
 from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
-import constants, os, time, requests
 from slave_controller_esg import SlaveController
-import subprocess, re, sqlite3, json, socket
 from datetime import datetime, timedelta
+import subprocess, re, sqlite3, json, socket, constants, os, time, requests
 import sen66
 
 app = Flask(__name__)
@@ -14,32 +13,16 @@ master_version = 1.99
 
 #for OAQ
 API_KEY = '9f6287775e5e7cbc01e8281c41f81354'
-cords = {'lat':12.93693, 'lon':80.23578}
 BASE_URL = 'https://api.openweathermap.org/data/2.5/air_pollution'
 db_path = '/home/pi/croppico-api-new/sensor_data.db'
+INTERFACE = "wlan0"
+WPA_CONF = "/etc/wpa_supplicant/wpa_supplicant.conf"
+slave = SlaveController(device_id)
 
 def get_db_connection():
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn
-
-def init_oaq_table():
-    try:
-        with sqlite3.connect(db_path) as conn:
-            conn.execute('''CREATE TABLE IF NOT EXISTS oaq (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                mode TEXT,
-                device_id TEXT
-            )''')
-            if conn.execute("SELECT COUNT(*) FROM oaq").fetchone()[0] == 0:
-                conn.execute("INSERT INTO oaq (mode, device_id) VALUES (?, ?)", ("api", None))
-            conn.commit()
-        print("oaq table ready")
-    except sqlite3.Error as e:
-        print(f"oaq table init failed: {e}")
-
-init_oaq_table()
-slave = SlaveController(device_id)
 
 def get_local_ip():
     try:
@@ -49,6 +32,47 @@ def get_local_ip():
         return local_ip
     except Exception:
         return "Not Connected"
+
+def connect_open_wifi(ssid, interface=INTERFACE):
+    try:
+        conf_block = f'\nnetwork={{\n\tssid="{ssid}"\n\tkey_mgmt=NONE\n}}\n'
+
+        append_cmd = f"echo '{conf_block}' | sudo tee -a {WPA_CONF} > /dev/null"
+        subprocess.run(append_cmd, shell=True, check=True)
+
+        subprocess.run(["sudo", "wpa_cli", "-i", interface, "reconfigure"],
+                        capture_output=True, text=True, timeout=15)
+        time.sleep(2)
+        list_out = subprocess.run(
+            ["sudo", "wpa_cli", "-i", interface, "list_networks"],
+            capture_output=True, text=True, timeout=15).stdout
+
+        net_id = None
+        for line in list_out.strip().split("\n")[1:]:
+            parts = line.split("\t")
+            if len(parts) >= 2 and parts[1] == ssid:
+                net_id = parts[0]
+
+        if net_id is None:
+            print(f"Could not find network id for '{ssid}' after reconfigure.")
+            return False
+
+        subprocess.run(["sudo", "wpa_cli", "-i", interface, "select_network", net_id],
+                        capture_output=True, text=True, timeout=15)
+        time.sleep(6)
+
+        status = subprocess.run(
+            ["sudo", "wpa_cli", "-i", interface, "status"],
+            capture_output=True, text=True, timeout=15).stdout
+
+        return f"ssid={ssid}" in status and "wpa_state=COMPLETED" in status
+
+    except subprocess.CalledProcessError as e:
+        print("Error connecting to open WiFi:", e)
+        return False
+    except subprocess.TimeoutExpired:
+        print("Timed out connecting to open WiFi.")
+        return False
 
 def get_wifi_strength(interface='wlan0'):
     try:
@@ -394,17 +418,22 @@ def wificonnect():
         if not ssid:
             return jsonify({"res": False})
 
-        if not pwd:
+        # if not pwd:  #NOT WORKINGG....
+        #     print("Connecting to OPEN WiFi...")
+        #     c = subprocess.run(
+        #         [ "sudo", "nmcli", "device", "wifi", "connect", ssid, "ifname", "wlan0"],
+        #         capture_output=True,
+        #         text=True,
+        #         timeout=30
+        #     )
+        #     if c.returncode != 0:
+        #         return jsonify({"res": False})
+        #     return jsonify({"res": True})
+        
+        if not pwd: #Working
             print("Connecting to OPEN WiFi...")
-            c = subprocess.run(
-                [ "sudo", "nmcli", "device", "wifi", "connect", ssid, "ifname", "wlan0"],
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
-            if c.returncode != 0:
-                return jsonify({"res": False})
-            return jsonify({"res": True})
+            success = connect_open_wifi(ssid)
+            return {'res': success}
 
         if pwd:
             print("Connecting to SECURED WiFi...")
@@ -416,6 +445,7 @@ def wificonnect():
         return {'res': False}
     return {'res': True}
     
+#New
 @app.route('/aqi/indoor', methods=["GET"])
 def indoor_aqi():
     try:
@@ -431,6 +461,7 @@ def indoor_aqi():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+#New
 @app.route('/aqi/outdoor', methods=["GET"])
 def outdoor_aqi():
     try:
@@ -486,36 +517,52 @@ def outdoor_aqi():
         print(f"Error reading OAQ: {type(e)} - {e}")
         return jsonify({"error": "OAQ read failed"}), 500
 
+#New
 @app.route('/aqi/outdoor/mode', methods=["POST"])
 def set_outdoor_aqi_mode():
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         mode = data.get("mode")
-        device_id = data.get("device_id")
+        device_id = data.get("device_id") or data.get("deviceid")
+        lat = data.get("lat") or data.get("latitude")
+        long = data.get("long") or data.get("longitude") or data.get("lon")
 
-        if mode not in ("api", "sensor"):
+        if not mode or mode not in ("api", "sensor"):
             return jsonify({"error": "Invalid mode. Use 'api' or 'sensor'"}), 400
 
         if mode == "sensor" and not device_id:
             return jsonify({"error": "Device ID is required for sensor mode"}), 400
 
+        if mode == "api" and (lat is None or long is None):
+            return jsonify({"error": "Latitude and longitude are required for api mode"}), 400
+
         with sqlite3.connect(db_path) as conn:
             if mode == "sensor":
-                conn.execute("UPDATE oaq SET mode = ?, device_id = ?",(mode, device_id))
+                conn.execute("UPDATE oaq SET mode = ?, device_id = ?", (mode, str(device_id).strip()))
             else:
-                conn.execute("UPDATE oaq SET mode = ?",(mode,))
+                conn.execute("UPDATE oaq SET mode = ?, latitude = ?, longitude = ?", (mode, str(lat).strip(), str(long).strip()))
             conn.commit()
-        return jsonify({"result": True,"mode": mode,"device_id": device_id})
+
+        return jsonify({
+            "result": True,
+            "mode": mode,
+            "device_id": str(device_id).strip() if mode == "sensor" else None,
+            "latitude": str(lat).strip() if mode == "api" else None,
+            "longitude": str(long).strip() if mode == "api" else None,
+            "lat": str(lat).strip() if mode == "api" else None,
+            "long": str(long).strip() if mode == "api" else None
+        })
     except Exception as e:
         print(f"Error setting outdoor AQI mode: {type(e)} - {e}")
         return jsonify({"error": "Failed to set outdoor AQI mode"}), 500
     
+#New  
 @app.route('/aqi/outdoor/mode', methods=["GET"])
 def get_outdoor_aqi_mode():
     try:
         with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT mode, device_id FROM oaq LIMIT 1")
+            cursor.execute("SELECT mode, device_id, latitude, longitude FROM oaq LIMIT 1")
             row = cursor.fetchone()
 
             if row is None:
@@ -523,13 +570,17 @@ def get_outdoor_aqi_mode():
 
             mode = row[0]
             device_id = row[1]
+            latitude = row[2] if len(row) > 2 and row[2] is not None else None
+            longitude = row[3] if len(row) > 3 and row[3] is not None else None
 
-        return jsonify({ "mode": mode,"device_id": device_id})
+        return jsonify({"mode": mode, "device_id": device_id, "latitude": latitude,
+            "longitude": longitude,"lat": latitude, "long": longitude})
 
     except Exception as e:
         print(f"Error getting outdoor AQI mode: {type(e)} - {e}")
         return jsonify({"error": "Failed to get outdoor AQI mode"}), 500
 
+#New
 @app.route('/esg/data', methods=['GET'])
 def esg_data():
     try:
@@ -562,6 +613,7 @@ def esg_data():
         print(f"Error fetching ESG data: {type(e)} – {e}")
         return jsonify({"error": "Failed to fetch ESG data"}), 500
 
+#New
 @app.route("/settings/light", methods=["POST"])
 def set_light_settings():
     try:

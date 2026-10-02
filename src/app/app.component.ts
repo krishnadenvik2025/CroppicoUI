@@ -88,12 +88,19 @@ export class AppComponent implements OnInit, OnChanges {
   };
   lightPanelExpanded: boolean = true;
   readonly lightZoneOrder = [1, 2, 3, 4, 5];
+  // readonly lightHues: { [key: number]: string } = {
+  //   1: '#2E9FC7',
+  //   2: '#8A5FD6',
+  //   3: '#B08122',
+  //   4: '#2E7FD6',
+  //   5: '#1E8E56',
+  // };
   readonly lightHues: { [key: number]: string } = {
     1: '#2E9FC7',
-    2: '#8A5FD6',
-    3: '#B08122',
-    4: '#2E7FD6',
-    5: '#1E8E56',
+    2: '#2E9FC7',
+    3: '#2E9FC7',
+    4: '#2E9FC7',
+    5: '#2E9FC7',
   };
 
   get anyLightOn(): boolean {
@@ -129,7 +136,7 @@ export class AppComponent implements OnInit, OnChanges {
   keyDownSubscription: any;
   clickSubscription: any;
 
-  image_urls: any = ["/assets/images/screen_saver/screen_saver_1.jpg", "/assets/images/screen_saver/screen_saver_2.jpg", "/assets/images/screen_saver/screen_saver_3.jpg"];
+  image_urls: any = ["/assets/images/screen_saver/screen_saver_1.jpg"];
   clearScreenSaverInterval: any;
   constructor(
     private http: HttpClient,

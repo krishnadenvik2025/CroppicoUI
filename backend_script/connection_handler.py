@@ -1,10 +1,9 @@
-import requests
-import time, json, socket, sqlite3
+import time, json, socket, sqlite3, requests, baselogger
 import paho.mqtt.client as mqtt
-import baselogger
 from constants import Peripherals
 
 logToFile = False
+db_path = "/home/pi/croppico-api-new/sensor_data.db"
 
 def check_internet(timeout=3):
     test_servers = [("1.1.1.1", 53),("8.8.8.8", 53),("9.9.9.9", 53)]
@@ -20,8 +19,6 @@ def check_internet(timeout=3):
             continue
     print("internet is not available")
     return False
-
-db_path = "/home/pi/croppico-api-new/sensor_data.db"
 
 def getOAQdetails():
     default = {"mode": None, "device_id": None}
@@ -103,7 +100,6 @@ class ConnectionHandler:
 
     def publish(self, dtype, data):
         try:
-            # if self.client.is_connected():
             if check_internet():
                 self.publish_pending()
                 if logToFile: self.logger.info("Publishing %s %s" % (dtype, data))
@@ -119,7 +115,7 @@ class ConnectionHandler:
     def connect(self):
         try:
             self.client.username_pw_set(username="homie", password="a'M5xu+N3RJ*_#")
-#            self.client.connect_async("ec2-65-0-156-233.ap-south-1.compute.amazonaws.com", 1883, 60)
+            #self.client.connect_async("ec2-65-0-156-233.ap-south-1.compute.amazonaws.com", 1883, 60)
             self.client.connect_async("ec2-13-234-159-78.ap-south-1.compute.amazonaws.com", 1883, 60)
             self.client.publish(topic="croppico/" + self.device_id + "/connection",
                                 payload=json.dumps({"time": int(time.time())}))

@@ -45,10 +45,12 @@ def ensure_table_columns(conn, table_name, columns):
     existing = get_table_columns(conn, table_name)
     for name, coltype in columns.items():
         if name not in existing:
+            print(f"Adding missing column '{name}' to '{table_name}'")
             conn.execute(f'ALTER TABLE {table_name} ADD COLUMN {name} {coltype}')
 
 def init_tables():
-    ddl=['''CREATE TABLE IF NOT EXISTS indoor_aqi (
+    ddl = [
+        '''CREATE TABLE IF NOT EXISTS indoor_aqi (
             id        INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             pm2_5     REAL,
@@ -58,8 +60,9 @@ def init_tables():
             aqi       INTEGER,
             voc       REAL,
             nox       REAL,
-            pm10     REAL
+            pm10      REAL
         )''',
+
         '''CREATE TABLE IF NOT EXISTS outdoor_aqi (
             id        INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -75,12 +78,14 @@ def init_tables():
             pm10      REAL,
             nh3       REAL
         )''',
+
         '''CREATE TABLE IF NOT EXISTS powerlog (
-            id              INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp       DATETIME DEFAULT CURRENT_TIMESTAMP,
-            emeter          REAL,
-            emeter_error    INTEGER DEFAULT 0
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp     DATETIME DEFAULT CURRENT_TIMESTAMP,
+            emeter        REAL,
+            emeter_error  INTEGER DEFAULT 0
         )''',
+
         '''CREATE TABLE IF NOT EXISTS esg_summary (
             id                  INTEGER PRIMARY KEY AUTOINCREMENT,
             received_date       DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -98,32 +103,115 @@ def init_tables():
             cum_total_yeild     REAL,
             cum_power_saved     REAL
         )''',
+
         '''CREATE TABLE IF NOT EXISTS mqtt_queue (
-            id              INTEGER PRIMARY KEY AUTOINCREMENT,
-            topic           TEXT NOT NULL,
-            payload         TEXT NOT NULL,
-            created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            topic       TEXT NOT NULL,
+            payload     TEXT NOT NULL,
+            created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
         )''',
-        '''CREATE TABLE IF NOT EXISTS light_settings(
-            id              INTEGER PRIMARY KEY AUTOINCREMENT,
-            modified_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
-            on_hour         INTEGER,
-            on_min          INTEGER,
-            off_hour        INTEGER,
-            off_min         INTEGER
-        )''']
+
+        '''CREATE TABLE IF NOT EXISTS light_settings (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            modified_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            on_hour     INTEGER,
+            on_min      INTEGER,
+            off_hour    INTEGER,
+            off_min     INTEGER
+        )''',
+        '''CREATE TABLE IF NOT EXISTS oaq (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            mode TEXT,
+            device_id TEXT,
+            latitude TEXT,
+            longitude TEXT
+        )'''
+    ]
+
+    expected_columns = {
+        'oaq': {
+            'mode': 'TEXT',
+            'device_id': 'TEXT',
+            'latitude': 'TEXT',
+            'longitude': 'TEXT'
+        },
+        'indoor_aqi': {
+            'pm2_5': 'REAL',
+            'temp': 'REAL',
+            'hump': 'REAL',
+            'co2': 'REAL',
+            'aqi': 'INTEGER',
+            'voc': 'REAL',
+            'nox': 'REAL',
+            'pm10': 'REAL'
+        },
+
+        'outdoor_aqi': {
+            'aqi': 'INTEGER',
+            'temp': 'REAL',
+            'hum': 'REAL',
+            'co2': 'REAL',
+            'voc': 'REAL',
+            'pm2p5': 'REAL',
+            'no2': 'REAL',
+            'so2': 'REAL',
+            'o3': 'REAL',
+            'pm10': 'REAL',
+            'nh3': 'REAL'
+        },
+
+        'powerlog': {
+            'emeter': 'REAL',
+            'emeter_error': 'INTEGER'
+        },
+
+        'esg_summary': {
+            'received_date': 'DATETIME',
+            'growcycle_id': 'INTEGER',
+            'start_date': 'DATETIME',
+            'end_date': 'DATETIME',
+            'water_saved': 'REAL',
+            'miles_saved': 'REAL',
+            'plastic_avoided': 'REAL',
+            'total_yeild': 'REAL',
+            'power_saved': 'REAL',
+            'cum_water_saved': 'REAL',
+            'cum_miles_saved': 'REAL',
+            'cum_plastic_avoided': 'REAL',
+            'cum_total_yeild': 'REAL',
+            'cum_power_saved': 'REAL'
+        },
+
+        'mqtt_queue': {
+            'topic': 'TEXT',
+            'payload': 'TEXT',
+            'created_at': 'DATETIME'
+        },
+
+        'light_settings': {
+            'modified_at': 'DATETIME',
+            'on_hour': 'INTEGER',
+            'on_min': 'INTEGER',
+            'off_hour': 'INTEGER',
+            'off_min': 'INTEGER'
+        }
+    }
+
     try:
         with sqlite3.connect(db_path) as conn:
             for stmt in ddl:
                 conn.execute(stmt)
-            ensure_table_columns(conn, 'indoor_aqi', {'pm2_5': 'REAL',
-                'temp': 'REAL','hump': 'REAL','co2': 'REAL',
-                'aqi': 'INTEGER','voc': 'REAL'})
-            ensure_table_columns(conn, 'outdoor_aqi', {'aqi': 'INTEGER',
-                'temp': 'REAL','hum': 'REAL','co2': 'REAL',
-                'voc': 'REAL','pm2p5': 'REAL',"no2": 'REAL',"so2": 'REAL','o3': 'REAL'})
+            for table_name, columns in expected_columns.items():
+                ensure_table_columns(conn, table_name,columns)
+            # Initialize OAQ configuration row
+            count = conn.execute("SELECT COUNT(*) FROM oaq").fetchone()[0]
+            if count == 0:
+                conn.execute('''INSERT INTO oaq(mode, device_id, latitude, longitude) VALUES (?, ?, ?, ?)''',(
+                        "api", None, str(cords['lat']),str(cords['lon'])))
+            conn.commit()
         print("All DB tables ready")
         return True
+
     except sqlite3.Error as e:
         print(f"DB init failed: {e}")
         return False
@@ -172,7 +260,20 @@ def read_sen66():
 
 def fetch_outdoor_aqi():
     try:
-        url = f"{BASE_URL}?lat={cords['lat']}&lon={cords['lon']}&appid={API_KEY}"
+        lat = cords['lat']
+        lon = cords['lon']
+        try:
+            with sqlite3.connect(db_path) as conn:
+                cur = conn.cursor()
+                cur.execute("SELECT latitude, longitude FROM oaq LIMIT 1")
+                row = cur.fetchone()
+                if row and row[0] and row[1]:
+                    lat = str(row[0]).strip()
+                    lon = str(row[1]).strip()
+        except Exception as err:
+            print(f"Could not read coordinates from oaq table, using defaults: {err}")
+
+        url = f"{BASE_URL}?lat={lat}&lon={lon}&appid={API_KEY}"
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         data = response.json()

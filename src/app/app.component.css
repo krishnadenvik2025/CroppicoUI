@@ -86,7 +86,7 @@ img.update {
   padding: 20px;
 }
 
-.birghtness-slider > ngx-slider {
+.birghtness-slider>ngx-slider {
   /* margin-top: 20px; */
   margin-left: 12px;
   height: 270px;
@@ -120,7 +120,7 @@ img.update {
   /* background-color: aliceblue; */
 }
 
-.content-space > .top-bar {
+.content-space>.top-bar {
   margin-top: 10px;
   height: 50px;
   width: 1200px;
@@ -131,7 +131,7 @@ img.update {
   font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
-.top-bar > .notification-pane {
+.top-bar>.notification-pane {
   width: 400px;
   height: 100%;
   border-radius: 30px;
@@ -139,7 +139,7 @@ img.update {
   /* margin-left: 10px; */
 }
 
-.top-bar > .warning-pane {
+.top-bar>.warning-pane {
   width: 400px;
   height: 100%;
   border-radius: 30px;
@@ -159,7 +159,7 @@ img.update {
   margin-top: 10px;
 }
 
-.top-bar > .clock-pane {
+.top-bar>.clock-pane {
   width: 300px;
   height: 100%;
   border-radius: 30px;
@@ -174,7 +174,7 @@ img.update {
   flex-direction: column;
 }
 
-.data-space > .data-circles {
+.data-space>.data-circles {
   padding-top: 30px;
   display: flex;
   flex-direction: row;
@@ -183,13 +183,13 @@ img.update {
   /* background-color: aqua; */
 }
 
-.data-circles > .water-status-circle {
+.data-circles>.water-status-circle {
   margin-left: 80px;
   display: flex;
   flex-direction: column;
 }
 
-.data-circles > .water-status-circle > apx-chart {
+.data-circles>.water-status-circle>apx-chart {
   margin-top: -10px;
   height: 350px;
   position: fixed;
@@ -197,7 +197,7 @@ img.update {
   /* background-color: rgba(199, 255, 249, 0.5); */
 }
 
-.water-status-circle > .water-status-data {
+.water-status-circle>.water-status-data {
   margin-top: 120px;
   margin-left: 45px;
   color: black;
@@ -205,14 +205,14 @@ img.update {
   /* z-index: 9; */
 }
 
-.data-circles > .ambience-status-circle {
+.data-circles>.ambience-status-circle {
   margin-left: 280px;
   height: 250px;
   position: fixed;
   /* background-color: rgba(233, 97, 73,0.5); */
 }
 
-.data-circles > .ambience-status-circle > apx-chart {
+.data-circles>.ambience-status-circle>apx-chart {
   margin-top: -170px;
   position: fixed;
   height: 200px;
@@ -220,7 +220,7 @@ img.update {
   /* background-color: aquamarine; */
 }
 
-.ambience-status-circle > .ambience-status-data {
+.ambience-status-circle>.ambience-status-data {
   color: black;
   margin-top: 80px;
   margin-left: 180px;
@@ -228,7 +228,7 @@ img.update {
   /* background-color: rgba(94, 64, 230, 0.5); */
 }
 
-.content-space > .footer {
+.content-space>.footer {
   height: 80px;
   width: 1200px;
   margin-top: 310px;
@@ -247,6 +247,7 @@ img.update {
   background-position: center;
   transition: background-image 0.5s ease-in-out;
 }
+
 .footer-message {
   opacity: 1;
   transform: translateY(0);
