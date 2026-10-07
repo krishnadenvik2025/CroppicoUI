@@ -38,7 +38,8 @@ class SlaveController(Thread):
         super(SlaveController, self).__init__()
         self.device_id = device_id
         self.__run_controller = False
-        self.__ser = Serial('/dev/ttyUSB0', 115200, timeout=2.0, parity=PARITY_NONE)
+        # self.__ser = Serial('/dev/ttyUSB0', 115200, timeout=2.0, parity=PARITY_NONE)
+        self.__ser = Serial('/dev/serial0', 115200, timeout=2.0, parity=PARITY_NONE) #denvik Homie settings
         self.__slave_requests = Requests()
         self.connectionHandler = ConnectionHandler(self.device_id)
         self.messages = Message()
@@ -65,7 +66,9 @@ class SlaveController(Thread):
         self.__alarm = {}
         self.__settings = {}
         self.__previousAlarm = {}
-        self.__lastUpdatedTime = now()
+        self.oaqdata = {}
+        self.iaqdata = {}
+        self.__lastUpdatedTime = now() - 30
         self.__lastSettingPolledTime = 0
         self.__wasAnySettingUpdated = False
         self.lastUserInputTime = 0
@@ -198,8 +201,9 @@ class SlaveController(Thread):
                                 self.supplementLevels["supp_ec_b"] = str(int(not int(pubRes["supp_ec_b"])))
                                 print("this is getting iaq")
                                 self.getIaq()
+                                self.getOaq()
                                 pubRes['iaq'] = self.iaqdata
-                                pubRes['oaq'] = self.iaqdata
+                                pubRes['oaq'] = self.oaqdata
                                 print("this is after getting iaq")
                                 self.connectionHandler.publish(self.messages.data, json.dumps(pubRes))
                                 # if self.__data["error"] == "1":
@@ -373,15 +377,42 @@ class SlaveController(Thread):
 
     def getOaq(self):
         try:
-            conn = sqlite3.connect(self.__db_path)
-            res = conn.execute("""SELECT aqi, temp, hump, co2, voc, pm2_5 FROM outdoor_aqi ORDER BY id DESC LIMIT 1""").fetchone()
-            print("Result:", res)
-            conn.close()
-            if res:
-                keys = ['aqi', 'temp', 'hum', 'co2', 'voc', 'pm2p5']
-                self.oaqdata = dict(zip(keys, res))
-            else:
-                self.oaqdata = {}
+            with sqlite3.connect(self.__db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT mode FROM oaq")
+                row = cursor.fetchone()
+                if row is None:
+                    return {"error": "No mode set"}
+                mode = row[0]
+            if mode == "sensor":
+                with sqlite3.connect(self.__db_path) as conn:
+                    cursor = conn.cursor()
+                    cursor.execute('SELECT aqi, temp, hum, co2, voc, pm2_5, pm10, timestamp '
+                        'FROM outdoor_aqi ORDER BY id DESC LIMIT 1')
+                    res = cursor.fetchone()
+
+                keys = ['aqi', 'temp', 'hum', 'co2', 'voc', 'pm2p5', 'pm10', 'timestamp']
+                res_dict = dict(zip(keys, res))
+                if res_dict:
+                    self.oaqdata = res_dict
+                else:
+                    self.oaqdata = {}
+
+            elif mode == "api":
+                with sqlite3.connect(self.__db_path) as conn:
+                    cursor = conn.cursor()
+                    cursor.execute('SELECT aqi, pm2p5, no2, so2, o3, pm10, nh3, co2, timestamp '
+                        'FROM outdoor_aqi ORDER BY id DESC LIMIT 1')
+                    res = cursor.fetchone()
+                keys = ['aqi','pm2p5', 'no2', 'so2', 'o3', 'pm10', 'nh3', 'co2', 'timestamp']
+                dat = dict(zip(keys, res))
+                if dat:
+                    self.oaqdata = {"aqi": dat.get("aqi"),
+                    "pm2p5": dat.get("pm2p5"), "pm10": dat.get("pm10"), "o3": dat.get("o3"),
+                    "no2": dat.get("no2"), "so2": dat.get("so2"),"co": dat.get("co2"),
+                    "nh3":dat.get("nh3")}
+                else:
+                    self.oaqdata = {}
         except Exception as e:
             traceback.print_exc()
 
@@ -390,7 +421,7 @@ class SlaveController(Thread):
             conn = sqlite3.connect(self.__db_path)
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO outdoor_aqi (aqi, temp, hump, co2, voc, pm2_5)
+                INSERT INTO outdoor_aqi (aqi, temp, hum, co2, voc, pm2_5)
                 VALUES (?, ?, ?, ?, ?, ?)
             ''', (data['aqi'], data['temp'], data['hum'], data['co2'], data['voc'], data['pm2p5']))
             conn.commit()
