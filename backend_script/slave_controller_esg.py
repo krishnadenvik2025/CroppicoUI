@@ -37,9 +37,12 @@ class SlaveController(Thread):
     def __init__(self, device_id):
         super(SlaveController, self).__init__()
         self.device_id = device_id
+        print("-----------------------")
+        print("Device ID :",self.device_id)
+        print("-----------------------")
         self.__run_controller = False
-        # self.__ser = Serial('/dev/ttyUSB0', 115200, timeout=2.0, parity=PARITY_NONE)
-        self.__ser = Serial('/dev/serial0', 115200, timeout=2.0, parity=PARITY_NONE) #denvik Homie settings
+        self.__ser = Serial('/dev/ttyUSB0', 115200, timeout=2.0, parity=PARITY_NONE)
+        # self.__ser = Serial('/dev/serial0', 115200, timeout=2.0, parity=PARITY_NONE) #denvik Homie settings
         self.__slave_requests = Requests()
         self.connectionHandler = ConnectionHandler(self.device_id)
         self.messages = Message()
@@ -409,7 +412,7 @@ class SlaveController(Thread):
                 if dat:
                     self.oaqdata = {"aqi": dat.get("aqi"),
                     "pm2p5": dat.get("pm2p5"), "pm10": dat.get("pm10"), "o3": dat.get("o3"),
-                    "no2": dat.get("no2"), "so2": dat.get("so2"),"co": dat.get("co2"),
+                    "no2": dat.get("no2"), "so2": dat.get("so2"),"co2": dat.get("co2"),
                     "nh3":dat.get("nh3")}
                 else:
                     self.oaqdata = {}

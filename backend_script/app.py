@@ -1,3 +1,5 @@
+# pip3 install sensirion-driver-adapters
+# pip3 install sensirion-i2c-sen66 
 from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
 from slave_controller_esg import SlaveController

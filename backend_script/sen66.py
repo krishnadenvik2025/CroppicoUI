@@ -354,7 +354,7 @@ def filter_data(stop_event):
                     fetch_outdoor_aqi()
         
         data = read_sen66()
-        if "error" not in data and data['aqi'] == 500 and data['voc'] in [0,None]:
+        if "error" in data and data['aqi'] == 500 and data['voc'] in [0,None] and data['co2'] > 60000:
             time.sleep(100)
             data = read_sen66()
         if "error" not in data:
