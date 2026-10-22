@@ -31,3 +31,6 @@ cd /var/www/
 rm -rf html
 cp -r /home/pi/krishna/cropicco-ui/html/ /var/www/html
 reboot
+
+$env:NODE_OPTIONS="--openssl-legacy-provider"
+npx ng build --configuration production

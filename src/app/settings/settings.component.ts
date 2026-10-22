@@ -26,6 +26,7 @@ import {
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { CalibrationDialogComponent } from 'src/shared/component/calibration-dialog/calibration-dialog.component';
 import { AuthComponent } from 'src/shared/component/auth/auth.component';
+import { WifiConnectionDialogComponent } from 'src/shared/component/wifi-connection-dialog/wifi-connection-dialog.component';
 import { APIS } from 'src/shared/model/api.model';
 import { ScreenSaverService } from 'src/core/screen-saver.service';
 
@@ -496,10 +497,10 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
     return (num.value >= num.min && num.value <= num.max);
   }
 
-  httpPost(method: string, body: any) {
+  httpPost(method: string, body: any): Promise<any> {
     console.log("Http Post : ", method, body);
     const endpoint = method.startsWith('/') ? method.substring(1) : method;
-    return new Promise((resolve, reject) => {
+    return new Promise<any>((resolve, reject) => {
       this.http.post<any>(this.url + "/" + endpoint, body).subscribe({
         next: data => {
           resolve(data);
@@ -511,26 +512,32 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       });
     });
-    return true;
   }
 
   async connectToWifi(ssid: string, password: string) {
+    if (this.wifiConnectionStatus === 'connecting') {
+      return;
+    }
+
     this.wifiConnectingSsid = ssid;
     this.wifiConnectionStatus = 'connecting';
+    const statusDialog = this.dialog.open(WifiConnectionDialogComponent, {
+      panelClass: 'dialog-responsive',
+      disableClose: true,
+      data: { ssid }
+    });
+
     const result = await this.httpPost('system/connectwifi', {
       "ssid": ssid,
       "pwd": password
     });
-    if (result) {
+    if (result?.res === true) {
       this.wifiConnectionStatus = 'success';
       this.curWifiName = ssid;
     } else {
       this.wifiConnectionStatus = 'failed';
     }
-    setTimeout(() => {
-      this.wifiConnectionStatus = 'idle';
-      this.wifiConnectingSsid = '';
-    }, 3000);
+    statusDialog.componentInstance.status = this.wifiConnectionStatus;
   }
 
   handleWifiClick(wifi: any) {

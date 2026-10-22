@@ -67,6 +67,20 @@
   font-weight: 500;
 }
 
+.confirmation-text {
+  font-size: 15px;
+  color: #4b5563;
+  margin: 0;
+  font-weight: 500;
+}
+
+.confirmation-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
 /* Success Animation */
 .success-animation {
   width: 70px;

@@ -314,7 +314,7 @@
                   <path d="M10 13a2.5 2.5 0 0 1 4-1" stroke="#167ffc" stroke-width="1.6" stroke-linecap="round" />
                 </svg>
               </div>
-              <div class="impact-panel-badge">LAST MONTH</div>
+              <div class="impact-panel-badge">LAST BATCH</div>
             </div>
             <div class="impact-panel-bottom">
               <div class="impact-panel-value">{{ ESGData?.water_saved || 0 }}<span class="impact-panel-unit">L</span>
@@ -358,7 +358,7 @@
                       stroke="#2e7d32" stroke-width="1.8" stroke-linejoin="round" />
                   </svg>
                 </div>
-                <div class="impact-badge">LAST MONTH</div>
+                <div class="impact-badge">LAST BATCH</div>
               </div>
               <div class="impact-bottom">
                 <div class="impact-value">{{ ESGData?.yield || 0 }}<span class="impact-unit">kg</span></div>
@@ -388,7 +388,7 @@
                 <div class="impact-badge">CUMULATIVE</div>
               </div>
               <div class="impact-bottom">
-                <div class="impact-value">{{ ESGData?.total_plastic_avoided || 0 }}<span class="impact-unit">kg</span>
+                <div class="impact-value">{{ ESGData?.total_plastic_avoided || 0 }}<span class="impact-unit">Bags</span>
                 </div>
                 <div class="impact-label">Plastic Diverted</div>
               </div>
@@ -407,10 +407,10 @@
                     <path d="M12 9.5v5" stroke="#ea580c" stroke-width="1.6" stroke-linecap="round" />
                   </svg>
                 </div>
-                <div class="impact-badge">LAST MONTH</div>
+                <div class="impact-badge">LAST BATCH</div>
               </div>
               <div class="impact-bottom">
-                <div class="impact-value">{{ ESGData?.plastic_avoided || 0 }}<span class="impact-unit">kg</span></div>
+                <div class="impact-value">{{ ESGData?.plastic_avoided || 0 }}<span class="impact-unit">Bags</span></div>
                 <div class="impact-label">Plastic Diverted</div>
               </div>
             </div>
@@ -434,7 +434,7 @@
                 <div class="impact-badge">CUMULATIVE</div>
               </div>
               <div class="impact-bottom">
-                <div class="impact-value">{{ ESGData?.total_miles_avoided || 0 }}<span class="impact-unit">kg</span>
+                <div class="impact-value">{{ ESGData?.total_miles_avoided || 0 }}<span class="impact-unit">km</span>
                 </div>
                 <div class="impact-label">Miles Avoided</div>
               </div>
@@ -450,10 +450,10 @@
                     <path d="M8 22h8" stroke="#595bd4" stroke-width="1.8" stroke-linecap="round" />
                   </svg>
                 </div>
-                <div class="impact-badge">LAST MONTH</div>
+                <div class="impact-badge">LAST BATCH</div>
               </div>
               <div class="impact-bottom">
-                <div class="impact-value">{{ ESGData?.miles_avoided || 0 }}<span class="impact-unit">kg</span></div>
+                <div class="impact-value">{{ ESGData?.miles_avoided || 0 }}<span class="impact-unit">km</span></div>
                 <div class="impact-label">Miles Avoided</div>
               </div>
             </div>
@@ -474,9 +474,9 @@
                 <div class="impact-badge">CUMULATIVE</div>
               </div>
               <div class="impact-bottom">
-                <div class="impact-value">{{ ESGData?.total_energy_saved || 0 }}<span class="impact-unit">kg</span>
+                <div class="impact-value">{{ ESGData?.total_energy_saved || 0 }}<span class="impact-unit">Unit/kWh</span>
                 </div>
-                <div class="impact-label">Energy Saved</div>
+                <div class="impact-label">Power Consumption</div>
               </div>
             </div>
             <div class="flip-card-face flip-card-back impact-card card-power">
@@ -487,11 +487,11 @@
                       stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                 </div>
-                <div class="impact-badge">LAST MONTH</div>
+                <div class="impact-badge">LAST BATCH</div>
               </div>
               <div class="impact-bottom">
-                <div class="impact-value">{{ ESGData?.energy_saved || 0 }}<span class="impact-unit">kg</span></div>
-                <div class="impact-label">Energy Saved</div>
+                <div class="impact-value">{{ ESGData?.energy_saved || 0 }}<span class="impact-unit">Unit/kWh</span></div>
+                <div class="impact-label">Power Consumption</div>
               </div>
             </div>
           </div>
@@ -564,8 +564,8 @@
                 </text>
               </svg>
             </div>
-            <div class="param-badge" [style.backgroundColor]="pm25Status.bg" [style.color]="pm25Status.fg">{{
-              pm25Status.txt }}</div>
+            <div class="param-badge" [style.backgroundColor]="pm25Status.bg" [style.color]="pm25Status.fg">
+              {{ pm25Status.txt }}</div>
           </div>
           <div class="param-bottom">
             <div class="param-label">INDOOR PM2.5</div>
@@ -872,8 +872,8 @@
                   stroke-linecap="round" />
               </svg>
             </div>
-            <div class="param-badge" [style.backgroundColor]="pm25Status.bg" [style.color]="pm25Status.fg">{{
-              pm25Status.txt }}</div>
+            <div class="param-badge" [style.backgroundColor]="outno2Status.bg" [style.color]="outno2Status.fg">{{
+              outno2Status.txt }}</div>
           </div>
           <div class="param-bottom">
             <div class="param-label">OUTDOOR NO2</div>
@@ -898,8 +898,8 @@
                   stroke-linecap="round" />
               </svg>
             </div>
-            <div class="param-badge" [style.backgroundColor]="co2Status.bg" [style.color]="co2Status.fg">{{
-              co2Status.txt }}</div>
+            <div class="param-badge" [style.backgroundColor]="outnh3Status.bg" [style.color]="outnh3Status.fg">{{
+              outnh3Status.txt }}</div>
           </div>
           <div class="param-bottom">
             <div class="param-label">OUTDOOR Ammonia</div>

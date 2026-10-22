@@ -60,9 +60,11 @@ class ConnectionHandler:
             self.client.connected_flag = True  # set flag
             print("Connected OK")
             self.client.subscribe("server/" + self.device_id + "/#")
-            self.client.subscribe(topic="croppico/" + self.device_id + "/EndBatch")
-            self.client.subscribe(topic="croppico/" + self.device_id + "/StartBatch")
-            self.client.subscribe(topic="croppico/" + self.device_id + "/oaq")
+            # server/000000004fb89dc2/startcycle
+            # server/000000004fb89dc2/endcycle
+            self.client.subscribe(topic="server/" + self.device_id + "/endcycle")
+            self.client.subscribe(topic="server/" + self.device_id + "/startcycle")
+            self.client.subscribe(topic="server/" + self.device_id + "/oaq")
             if self.OAQdetails and self.OAQdetails.get('mode') == "sensor" and self.OAQdetails.get('device_id'):
                 self.client.subscribe(topic="croppico/" + self.OAQdetails['device_id'] + "/oaq")
 #            self.client.subscribe("server/0000000032d7ed1a/#")

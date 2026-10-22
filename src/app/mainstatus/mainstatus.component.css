@@ -537,7 +537,7 @@
 }
 
 .param-badge {
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.4px;
   border-radius: 10px;
@@ -654,7 +654,7 @@
 }
 
 .impact-panel-badge {
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.4px;
   color: #1e62d0;
@@ -754,7 +754,7 @@
 }
 
 .impact-badge {
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.4px;
   background-color: rgba(255, 255, 255, 0.75);

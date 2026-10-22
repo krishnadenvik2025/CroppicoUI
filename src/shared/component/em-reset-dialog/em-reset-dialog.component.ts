@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { environment } from 'src/environments/environment';
 
@@ -8,9 +8,9 @@ import { environment } from 'src/environments/environment';
   templateUrl: './em-reset-dialog.component.html',
   styleUrls: ['./em-reset-dialog.component.scss']
 })
-export class EmResetDialogComponent implements OnInit {
-  public status: 'LOADING' | 'SUCCESS' | 'FAILED' = 'LOADING';
-  public statusMessage: string = 'Resetting Energy Meter...';
+export class EmResetDialogComponent {
+  public status: 'CONFIRMATION' | 'LOADING' | 'SUCCESS' | 'FAILED' = 'CONFIRMATION';
+  public statusMessage: string = 'Are you sure you want to reset the energy meter?';
   public url = environment.api;
 
   constructor(
@@ -18,10 +18,6 @@ export class EmResetDialogComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public dialogData: any,
     public dialogRef: MatDialogRef<EmResetDialogComponent>
   ) { }
-
-  ngOnInit(): void {
-    this.resetEnergyMeter();
-  }
 
   resetEnergyMeter() {
     this.status = 'LOADING';

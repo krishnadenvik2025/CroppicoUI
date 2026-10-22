@@ -27,6 +27,7 @@ GPIO.setup(12, GPIO.OUT)
 now = lambda: int(time.time())
 datenow = lambda: datetime.datetime.now()
 logToFile = True
+IST = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
 
 def readConfig():
     with open('/home/pi/croppico-api-new/config.json', 'r') as c:
@@ -41,8 +42,8 @@ class SlaveController(Thread):
         print("Device ID :",self.device_id)
         print("-----------------------")
         self.__run_controller = False
-        self.__ser = Serial('/dev/ttyUSB0', 115200, timeout=2.0, parity=PARITY_NONE)
-        # self.__ser = Serial('/dev/serial0', 115200, timeout=2.0, parity=PARITY_NONE) #denvik Homie settings
+        # self.__ser = Serial('/dev/ttyUSB0', 115200, timeout=2.0, parity=PARITY_NONE)
+        self.__ser = Serial('/dev/serial0', 115200, timeout=2.0, parity=PARITY_NONE) #denvik Homie settings
         self.__slave_requests = Requests()
         self.connectionHandler = ConnectionHandler(self.device_id)
         self.messages = Message()
@@ -217,7 +218,7 @@ class SlaveController(Thread):
                                     pubAlarmRes["timestamp"] = now()
                                     pubAlarmRes['iaq_error'] = "1" if not indoorAQI_flag else "0"
                                     pubAlarmRes['oaq_error'] = "0"
-                                    pubAlarmRes['Water_level_critically_low'] = "1" if self.__data["water_level"] == 0 else "0"
+                                    pubAlarmRes['water_level_critically_low'] = "1" if self.__data["water_level"] == 0 else "0"
                                     print("ALARM  : ", pubAlarmRes)
                                     self.connectionHandler.publish(self.messages.alarm, json.dumps(pubAlarmRes))
                                 # self.checkCloudMaintenanceControl("ALL")
@@ -835,56 +836,95 @@ class SlaveController(Thread):
         if res:
             self.setMaintenanceState(False)
 
+    @staticmethod
+    def _iso_to_date(raw):
+        for fmt in ("%Y-%m-%dT%H:%M:%S.%fZ", "%Y-%m-%dT%H:%M:%SZ"):
+            try:
+                dt = datetime.datetime.strptime(raw, fmt).replace(tzinfo=datetime.timezone.utc)
+                return dt.astimezone(IST).strftime("%Y-%m-%d")
+            except ValueError:
+                continue
+        raise ValueError(f"Unrecognised date format: {raw}")
+
     def EndCycledata(self, data):
-        try:  
-            conn = sqlite3.connect("/home/pi/croppico-api-new/sensor_data.db")
-            cursor = conn.cursor()
-            start_date = datetime.strptime(data["start_date"], "%d.%m.%Y").strftime("%Y-%m-%d")
-            end_date = datetime.strptime(data["end_date"], "%d.%m.%Y").strftime("%Y-%m-%d")
-            with sqlite3.connect(self.__db_path) as con:
-                cum_data = con.execute("""SELECT cum_water_saved, cum_miles_saved, cum_plastic_avoided, cum_total_yeild, cum_power_saved 
-                FROM esg_summary ORDER BY id DESC LIMIT 1""").fetchone()
-                print("cum_data", cum_data)
-                if cum_data:
-                    cum_water_saved = (cum_data[0] if cum_data[0] else 0) + data.get("water_saved", 0)
-                    cum_miles_saved = (cum_data[1] if cum_data[1] else 0) + data.get("miles_saved", 0)
-                    cum_plastic_avoided = (cum_data[2] if cum_data[2] else 0) + data.get("plastic_avoided", 0)
-                    cum_total_yeild = (cum_data[3] if cum_data[3] else 0) + data.get("total_yeild", 0)
-                    cum_power_saved = (cum_data[4] if cum_data[4] else 0) + data.get("power_saved", 0)
-                else:
-                    cum_water_saved = data.get("water_saved", 0)
-                    cum_miles_saved = data.get("miles_saved", 0)
-                    cum_plastic_avoided = data.get("plastic_avoided", 0)
-                    cum_total_yeild = data.get("total_yeild", 0)
-                    cum_power_saved = data.get("power_saved", 0)
-
-            cursor.execute("""UPDATE esg_summary set start_date = ?, end_date = ?, water_saved = ?, miles_saved = ?,
-                    plastic_avoided = ?, total_yeild = ?, power_saved = ?, cum_water_saved = ?, cum_miles_saved = ?,
-                    cum_plastic_avoided = ?, cum_total_yeild = ?, cum_power_saved = ? WHERE growcycle_id = ? """, (
-                 start_date, end_date, data.get("water_saved", 0), data.get("miles_saved", 0), data.get("plastic_avoided", 0),
-                data.get("total_yeild", 0), data.get("power_saved", 0), cum_water_saved, cum_miles_saved, 
-                cum_plastic_avoided, cum_total_yeild, cum_power_saved,data.get("growCycle_id", 0)))
-            conn.commit()
-            conn.close()
-            res = self.EndBatch()
-            if logToFile:self.logger.info(f"ESG EndCycle summary stored successfully.{res}")
-        except Exception as e:
-            if logToFile:self.logger.exception(f"Error storing ESG EndCycle data: {e}")
-
-    def StartCycledata(self, data):
+        conn = None
         try:
+            start_date = self._iso_to_date(data["start_date"])
+            end_date = self._iso_to_date(data["end_date"])
+            growcycle_id = data.get("growcycle_id") or data.get("growCycle_id")
+
+            water_saved     = data.get("water_saved", 0)
+            miles_saved     = data.get("miles_saved", 0)
+            plastic_avoided = data.get("plastic_avoided", 0)
+            total_yield     = data.get("total_yield", data.get("total_yeild", 0))
+            power_saved     = data.get("power_saved", 0)
+
             conn = sqlite3.connect(self.__db_path)
             cursor = conn.cursor()
-            start_date = datetime.strptime(data["start_date"], "%d.%m.%Y").strftime("%Y-%m-%d")
-            cursor.execute("""INSERT INTO esg_summary (growcycle_id, start_date) VALUES (?, ?)""", (
-                int(data.get("growCycle_id", 0)), start_date))
+
+            prev = cursor.execute("""SELECT cum_water_saved, cum_miles_saved, cum_plastic_avoided,
+                cum_total_yeild, cum_power_saved FROM esg_summary
+                WHERE growcycle_id != ? AND cum_water_saved IS NOT NULL
+                ORDER BY id DESC LIMIT 1""", (growcycle_id,)).fetchone()
+            prev = [v or 0 for v in prev] if prev else [0, 0, 0, 0, 0]
+
+            cum_water_saved     = prev[0] + water_saved
+            cum_miles_saved     = prev[1] + miles_saved
+            cum_plastic_avoided = prev[2] + plastic_avoided
+            cum_total_yeild     = prev[3] + total_yield
+            cum_power_saved     = prev[4] + power_saved
+
+            values = (start_date, end_date, water_saved, miles_saved, plastic_avoided,
+                    total_yield, power_saved, cum_water_saved, cum_miles_saved,
+                    cum_plastic_avoided, cum_total_yeild, cum_power_saved)
+
+            cursor.execute(
+                """UPDATE esg_summary SET start_date=?, end_date=?, water_saved=?, miles_saved=?,
+                plastic_avoided=?, total_yeild=?, power_saved=?, cum_water_saved=?,
+                cum_miles_saved=?, cum_plastic_avoided=?, cum_total_yeild=?, cum_power_saved=?
+                WHERE growcycle_id = ?""", values + (growcycle_id,))
+
+            if cursor.rowcount == 0:   # start event was missed -> create the row now
+                cursor.execute(
+                    """INSERT INTO esg_summary (growcycle_id, start_date, end_date, water_saved,
+                    miles_saved, plastic_avoided, total_yeild, power_saved, cum_water_saved,
+                    cum_miles_saved, cum_plastic_avoided, cum_total_yeild, cum_power_saved)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""", (growcycle_id,) + values)
+
             conn.commit()
-            conn.close()
-            res = self.startBatch()
-            print("res", res)
-            if logToFile:self.logger.info(f"ESG StartCycle summary stored successfully. {res}")
+            res = self.EndBatch()
+            if logToFile:
+                self.logger.info(f"ESG EndCycle summary stored successfully. {res}")
         except Exception as e:
-            if logToFile:self.logger.exception(f"Error storing ESG StartCycle data: {e}")
+            if logToFile:
+                self.logger.exception(f"Error storing ESG EndCycle data: {e}")
+        finally:
+            if conn:
+                conn.close()
+
+    def StartCycledata(self, data):
+        conn = None
+        try:
+            raw = data["start_date"]
+            start_date = datetime.datetime.strptime(raw, "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%Y-%m-%d")
+
+            growcycle_id = data.get("growcycle_id") or data.get("growCycle_id")
+
+            conn = sqlite3.connect(self.__db_path)
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO esg_summary (growcycle_id, start_date) VALUES (?, ?)",
+                (growcycle_id, start_date),)
+            conn.commit()
+
+            res = self.startBatch()
+            if logToFile:
+                self.logger.info(f"ESG StartCycle summary stored successfully. {res}")
+        except Exception as e:
+            if logToFile:
+                self.logger.exception(f"Error storing ESG StartCycle data: {e}")
+        finally:
+            if conn:
+                conn.close()
 
     def setMaintenanceControl(self, mtype, state, duration):
         result = False
@@ -964,9 +1004,9 @@ class SlaveController(Thread):
         try:
             if cmType == "maintenance":
                 self.processAdhoc(cmMsg)
-            if cmType == "StartCycle":
+            if cmType == "startcycle":
                 self.StartCycledata(cmMsg)
-            if cmType == "EndCycle":
+            if cmType == "endcycle":
                 self.EndCycledata(cmMsg)
             if cmType == "reset":
                 self.resetError()

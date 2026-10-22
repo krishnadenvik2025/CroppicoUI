@@ -37,20 +37,16 @@ export class AppComponent implements OnInit, OnChanges {
   prevent_toggle: boolean = false;
   allData: any;
   ESGData: any;
+  GrowCycleData: any;
   IAQ: any;
   OAQ: any;
   outdoorMode: number = 0;
   currentFooterIndex: number = 0;
   footerInterval: any;
+  footerTransitionTimeout: any;
   footerVisible = true;
   footerMessages: any = {
-    1: [
-      "Homie's 72 plants are actively absorbing CO₂ and releasing fresh oxygen.",
-      "Your indoor garden is improving air quality every day.",
-      "Plants naturally help regulate humidity levels.",
-      "Green spaces contribute to a healthier workspace.",
-      "Indoor plants can help reduce stress and improve wellbeing."
-    ],
+    1: [],
     2: [
       "Aligning your workspace with UN Sustainable Development Goals 2, 12, and 13.",
       "Supporting sustainable consumption and production practices.",
@@ -155,6 +151,7 @@ export class AppComponent implements OnInit, OnChanges {
     this.getData();
     this.getesg();
     this.getAQI();
+    this.getGrowCycle();
     setInterval(() => {
       this.time = new Date();
     }, 1000);
@@ -163,6 +160,7 @@ export class AppComponent implements OnInit, OnChanges {
         this.getData();
         this.getesg();
         this.getAQI();
+        this.getGrowCycle();
       }
     }, 20000);
   }
@@ -282,7 +280,35 @@ export class AppComponent implements OnInit, OnChanges {
       this.ESGData = esgdataapi;
     }
   }
-
+  async getGrowCycle() {
+    let growcycledata: any = await new Promise((resolve, reject) => {
+      this.http.get<any[]>(this.url + "/GrowCycle/details").subscribe({
+        next: data => { resolve(data); },
+        error: error => {
+          console.error("Grow cycle details API error", error);
+          resolve(false);
+        }
+      });
+    });
+    if (growcycledata) {
+      this.GrowCycleData = growcycledata;
+      if (this.GrowCycleData?.end_date) {
+        this.footerMessages[1] = [
+          `Grow cycle ended on ${this.GrowCycleData?.end_date || 'N/A'} - ${this.GrowCycleData?.growcycle_id || 'N/A'} (No Active Grow Cycle)`,
+        ];
+      } else if (this.GrowCycleData?.start_date) {
+        this.footerMessages[1] = [
+          `Grow cycle started on ${this.GrowCycleData?.start_date || 'N/A'} - ${this.GrowCycleData?.growcycle_id || 'N/A'} (Live)`,
+          
+        ];
+      }
+      else {
+        this.footerMessages[1] = [
+          `Grow cycle not started Yet`,
+        ];
+      }
+    }
+  }
   async getAQI() {
     let IAQApiCallData: any = await new Promise((resolve, reject) => {
       this.http.get<any[]>(this.url + "/aqi/indoor").subscribe({
@@ -319,18 +345,34 @@ export class AppComponent implements OnInit, OnChanges {
 
   startFooterRotation() {
     this.footerInterval = setInterval(() => {
+      const messages = this.footerMessages[this.currentMainScreen] || [];
+      if (messages.length <= 1) {
+        this.currentFooterIndex = 0;
+        this.footerVisible = true;
+        return;
+      }
+
       this.footerVisible = false;
+      clearTimeout(this.footerTransitionTimeout);
 
-      setTimeout(() => {
-        const messages = this.footerMessages[this.currentMainScreen] || [];
-
-        if (messages.length) {
+      this.footerTransitionTimeout = setTimeout(() => {
+        const currentMessages = this.footerMessages[this.currentMainScreen] || [];
+        if (currentMessages.length > 1) {
           this.currentFooterIndex =
-            (this.currentFooterIndex + 1) % messages.length;
+            (this.currentFooterIndex + 1) % currentMessages.length;
+        } else {
+          this.currentFooterIndex = 0;
         }
         this.footerVisible = true;
       }, 500);
     }, 10000);
+  }
+
+  onMainScreenChanged(screen: number) {
+    clearTimeout(this.footerTransitionTimeout);
+    this.currentMainScreen = screen;
+    this.currentFooterIndex = 0;
+    this.footerVisible = true;
   }
 
   setWifiSignalImgFn = () => {
@@ -637,11 +679,8 @@ export class AppComponent implements OnInit, OnChanges {
     });
   }
   get currentFooterText(): string {
-    return (
-      this.footerMessages[this.currentMainScreen]?.[
-      this.currentFooterIndex
-      ] || ''
-    );
+    const messages = this.footerMessages[this.currentMainScreen] || [];
+    return messages[this.currentFooterIndex] || '';
   }
 
   onInteraction(i: any) {

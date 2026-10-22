@@ -1,0 +1,18 @@
+<div class="wifi-dialog" [ngSwitch]="status">
+  <div *ngSwitchCase="'connecting'" class="wifi-dialog-content wifi-connecting">
+    <div class="wifi-spinner-ring"></div>
+    <p>Connecting to <strong>{{ dialogData.ssid }}</strong>...</p>
+  </div>
+
+  <div *ngSwitchCase="'success'" class="wifi-dialog-content wifi-success">
+    <div class="wifi-status-icon">✓</div>
+    <p>Connected to <strong>{{ dialogData.ssid }}</strong></p>
+    <button mat-raised-button class="bg-success" (click)="dialogRef.close()">OK</button>
+  </div>
+
+  <div *ngSwitchCase="'failed'" class="wifi-dialog-content wifi-failed">
+    <div class="wifi-status-icon">✕</div>
+    <p>Connection failed for <strong>{{ dialogData.ssid }}</strong></p>
+    <button mat-raised-button class="bg-failed" (click)="dialogRef.close()">Close</button>
+  </div>
+</div>

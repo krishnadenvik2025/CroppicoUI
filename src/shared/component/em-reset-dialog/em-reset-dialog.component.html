@@ -1,4 +1,15 @@
 <div class="em-dialog-container">
+  <div *ngIf="status === 'CONFIRMATION'" class="p-20 dialog-body text-center">
+    <div class="icon-wrapper">
+      <img class="electricity-icon" src="../../../assets/images/electricity.png" alt="Energy Meter" />
+    </div>
+    <p class="confirmation-text">{{ statusMessage }}</p>
+    <div class="confirmation-actions">
+      <button mat-raised-button class="bg-success" (click)="resetEnergyMeter()">OK</button>
+      <button mat-raised-button class="bg-failed" (click)="close()">Cancel</button>
+    </div>
+  </div>
+
   <!-- Loading State -->
   <div *ngIf="status === 'LOADING'" class="p-20 dialog-body text-center">
     <div class="icon-wrapper">

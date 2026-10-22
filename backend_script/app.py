@@ -4,15 +4,15 @@ from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
 from slave_controller_esg import SlaveController
 from datetime import datetime, timedelta
-import subprocess, re, sqlite3, json, socket, constants, os, time, requests
-import sen66
+import subprocess, re, sqlite3, json, socket, constants, os, time, requests, baselogger
+import sen66 
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 160 * 1024 * 1024
 CORS(app)
 device_id = constants.getserial()
 master_version = 1.99
-
+log = baselogger.get_logger('Main')
 #for OAQ
 API_KEY = '9f6287775e5e7cbc01e8281c41f81354'
 BASE_URL = 'https://api.openweathermap.org/data/2.5/air_pollution'
@@ -56,7 +56,7 @@ def connect_open_wifi(ssid, interface=INTERFACE):
                 net_id = parts[0]
 
         if net_id is None:
-            print(f"Could not find network id for '{ssid}' after reconfigure.")
+            log.info(f"Could not find network id for '{ssid}' after reconfigure.")
             return False
 
         subprocess.run(["sudo", "wpa_cli", "-i", interface, "select_network", net_id],
@@ -66,14 +66,13 @@ def connect_open_wifi(ssid, interface=INTERFACE):
         status = subprocess.run(
             ["sudo", "wpa_cli", "-i", interface, "status"],
             capture_output=True, text=True, timeout=15).stdout
-
-        return f"ssid={ssid}" in status and "wpa_state=COMPLETED" in status
+        return True
 
     except subprocess.CalledProcessError as e:
-        print("Error connecting to open WiFi:", e)
+        log.error("Error connecting to open WiFi:", e)
         return False
     except subprocess.TimeoutExpired:
-        print("Timed out connecting to open WiFi.")
+        log.error("Timed out connecting to open WiFi.")
         return False
 
 def get_wifi_strength(interface='wlan0'):
@@ -95,12 +94,12 @@ def get_wifi_strength(interface='wlan0'):
             return None
 
     except subprocess.CalledProcessError as e:
-        print(f"Error: {e}")
+        log.error(f"Error: {e}")
         return None
 
 @app.before_request
 def log_api_call():
-    print(f"API called: {request.endpoint}")
+    log.info(f"API called: {request.endpoint}")
 
 @app.route('/data', methods=["GET"])
 def data():
@@ -132,25 +131,20 @@ def getsettings():
         res['light'] = { "on_hour": lgt[0], "on_min": lgt[1], "off_hour": lgt[2], "off_min": lgt[3] }
     else:
         res['light'] = { "on_hour": 7, "on_min": 0, "off_hour": 21, "off_min": 0 }
-
-    print(type(res))
     return res
 
 @app.route('/historicalData/<start>/<end>', methods=["GET"])
 def getchat(start, end):
-    print("entering get chart")
+    log.info(f"entering get chart Start: {start}, End: {end}")
     columns = ["PH", "EC", "water_temp", "ambient_temp"]
     all_data = []
     start_timestamp = start
     end_timestamp = end
-    print(start_timestamp)
-    print(end_timestamp)
     for column in columns:
         results = get_graph_value(start_timestamp, end_timestamp, column)
         all_data.append({"name": column, "data": results})
     json_output = {"data": all_data}
-    print(json_output)
-    print(type(json_output))
+    log.info(f"Generated chart data: {json_output}")
     return json_output
 
 def get_graph_value(start_timestamp, end_timestamp, column):
@@ -190,17 +184,16 @@ def get_file_list(folder_path, file_type):
 @app.route('/system/screen', methods=["POST"])
 def pause_poll():
     params = request.json
-    print(params)
     screen = params["screen"]
     status = params["status"]
-    print(screen, status)
+    log.info(f"Pausing polling for screen: {screen}, status: {status}")
     res = slave.poll_pause(str(status))
     return {'result': res}
 
 @app.route('/settings/<sType>', methods=["POST"])
 def settings(sType):
     params = request.json
-    print(sType, params)
+    log.info(f"Updating settings for type: {sType}, params: {params}")
     res = slave.setNewSettings(str(sType), params)
     # return res
     return {'result': res}
@@ -298,7 +291,7 @@ def flush():
 
 @app.route('/system/flush/getflushresult', methods=["GET"])
 def flushresult():
-    print("get flush result")
+    log.info("get flush result")
     res = slave.getFlushResult()
     return {'result': res}
 
@@ -310,7 +303,7 @@ def topup():
 
 @app.route('/system/topup/gettopupresult', methods=["GET"])
 def topupresult():
-    print("get topup result")
+    log.info("get topup result")
     res = slave.getTopupResult()
     return {'result': res}
 
@@ -340,7 +333,7 @@ def watercon_pause():
         res = slave.waterpas("01")
         return {'result': res}
     except Exception as e:
-        print("watercon_pause error", e)
+        log.error("watercon_pause error", e)
         return {'result': False}   
 #New
 @app.route('/system/watercon/resume', methods=["GET"])
@@ -349,7 +342,7 @@ def watercon_resume():
         res = slave.waterpas("00")
         return {'result': res}
     except Exception as e:
-        print("watercon_resume error", e)
+        log.error("watercon_resume error", e)
         return {'result': False}
 
 @app.route('/system/versioninfo', methods=["GET"])
@@ -361,14 +354,12 @@ def version():
            "master": master_version,
            "board_version": board_version,
            "local_ip": ip}
-    print("home---------------->", res)
+    log.info("home---------------->", res)
     return res
 
 @app.route('/screensaverdata', methods=["POST"])
 def screensaver():
-    print("screensaver")
     data = request.json
-    print("recieved", data)
     interval_time = request.json["interval_time"]
     status = request.json["status"]
     if str(status) == "True":
@@ -406,7 +397,7 @@ def wifinames():
         return jsonify({"res": wifi_list, "cur": cur})
 
     except Exception as e:
-        print("WiFi scan error:", e)
+        log.error("WiFi scan error:", e)
         return jsonify({"res": [], "cur": ""})
 
 @app.route('/system/connectwifi', methods=["POST"])
@@ -415,35 +406,22 @@ def wificonnect():
         creds = request.get_json() or {}
         ssid = str(creds.get("ssid", "")).strip()
         pwd = str(creds.get("pwd", "")).strip()
-        print("Connecting to:", ssid, "- password:", "(none, open network)" if not pwd else "(provided)")
-
+        log.info(f"Connecting to: {ssid}, password: {'(none, open network)' if not pwd else '(provided)'}")
         if not ssid:
             return jsonify({"res": False})
-
-        # if not pwd:  #NOT WORKINGG....
-        #     print("Connecting to OPEN WiFi...")
-        #     c = subprocess.run(
-        #         [ "sudo", "nmcli", "device", "wifi", "connect", ssid, "ifname", "wlan0"],
-        #         capture_output=True,
-        #         text=True,
-        #         timeout=30
-        #     )
-        #     if c.returncode != 0:
-        #         return jsonify({"res": False})
-        #     return jsonify({"res": True})
         
         if not pwd: #Working
-            print("Connecting to OPEN WiFi...")
+            log.info("Connecting to OPEN WiFi...")
             success = connect_open_wifi(ssid)
             return {'res': success}
 
         if pwd:
-            print("Connecting to SECURED WiFi...")
+            log.info("Connecting to SECURED WiFi...")
             c = subprocess.call(["sudo", "nodewifi.sh", ssid, pwd])
             if c != 0: return {'res': False}
 
     except Exception as e:
-        print("Error:", e)
+        log.error("Error:", e)
         return {'res': False}
     return {'res': True}
     
@@ -516,7 +494,7 @@ def outdoor_aqi():
 
         return jsonify({"error": "Unknown mode"}), 400
     except Exception as e:
-        print(f"Error reading OAQ: {type(e)} - {e}")
+        log.error(f"Error reading OAQ: {type(e)} - {e}")
         return jsonify({"error": "OAQ read failed"}), 500
 
 #New
@@ -555,7 +533,7 @@ def set_outdoor_aqi_mode():
             "long": str(long).strip() if mode == "api" else None
         })
     except Exception as e:
-        print(f"Error setting outdoor AQI mode: {type(e)} - {e}")
+        log.error(f"Error setting outdoor AQI mode: {type(e)} - {e}")
         return jsonify({"error": "Failed to set outdoor AQI mode"}), 500
     
 #New  
@@ -579,40 +557,42 @@ def get_outdoor_aqi_mode():
             "longitude": longitude,"lat": latitude, "long": longitude})
 
     except Exception as e:
-        print(f"Error getting outdoor AQI mode: {type(e)} - {e}")
+        log.error(f"Error getting outdoor AQI mode: {type(e)} - {e}")
         return jsonify({"error": "Failed to get outdoor AQI mode"}), 500
 
 #New
 @app.route('/esg/data', methods=['GET'])
 def esg_data():
     try:
-        today = datetime.now()
-        cur_1st = today.replace(day=1)
-        prev_last_day = cur_1st - timedelta(days=1)
-        prev_first_day = prev_last_day.replace(day=1)
-        start_date = prev_first_day.strftime("%Y-%m-%d")
-        end_date = prev_last_day.strftime("%Y-%m-%d")
-        print(f"Fetching ESG data from {start_date} to {end_date}")
         conn = get_db_connection()
-        cum_result = conn.execute("""SELECT cum_water_saved AS cum_water_saved, cum_miles_saved AS cum_miles_avoided, 
-            cum_plastic_avoided AS cum_plastic_avoided, cum_total_yeild AS cum_yeild, cum_power_saved AS cum_energy_saved
-            FROM esg_summary ORDER BY id DESC LIMIT 1""").fetchone()
-        result = conn.execute("""SELECT sum(water_saved) AS water_saved, sum(miles_saved) AS miles_avoided, 
-            sum(plastic_avoided) AS plastic_avoided, sum(total_yeild) AS yeild, sum(power_saved) AS energy_saved 
-            FROM esg_summary WHERE DATE(end_date) BETWEEN ? AND ?""", (start_date, end_date)).fetchone()
-        conn.close()
-        return jsonify({"water_saved": result["water_saved"] or 0,
-            "plastic_avoided": result["plastic_avoided"] or 0,
-            "miles_avoided": result["miles_avoided"] or 0,
-            "yield": result["yeild"] or 0,
-            "energy_saved": result["energy_saved"] or 0,
+        details = conn.execute("SELECT start_date, end_date, growcycle_id FROM esg_summary ORDER BY id DESC LIMIT 1").fetchone()
+        if details:
+            start_date = details["start_date"]
+            end_date = details["end_date"]
+            growcycle_id = details["growcycle_id"]
+            if start_date is not None and end_date is None:
+                cum_result = conn.execute("""SELECT cum_water_saved AS cum_water_saved, cum_miles_saved AS cum_miles_avoided, 
+                    cum_plastic_avoided AS cum_plastic_avoided, cum_total_yeild AS cum_yeild, cum_power_saved AS cum_energy_saved,
+                    water_saved, miles_saved, plastic_avoided, total_yeild, power_saved
+                    FROM esg_summary WHERE growcycle_id != ? ORDER BY id DESC LIMIT 1""", (growcycle_id,)).fetchone()
+            elif start_date is not None and end_date is not None:
+                cum_result = conn.execute("""SELECT cum_water_saved AS cum_water_saved, cum_miles_saved AS cum_miles_avoided, 
+                    cum_plastic_avoided AS cum_plastic_avoided, cum_total_yeild AS cum_yeild, cum_power_saved AS cum_energy_saved,
+                    water_saved, miles_saved, plastic_avoided, total_yeild, power_saved
+                    FROM esg_summary WHERE growcycle_id = ? ORDER BY id DESC LIMIT 1""", (growcycle_id,)).fetchone()
+            conn.close()
+        return jsonify({"water_saved": cum_result["water_saved"] or 0,
+            "plastic_avoided": cum_result["plastic_avoided"] or 0,
+            "miles_avoided": cum_result["miles_saved"] or 0,
+            "yield": cum_result["total_yeild"] or 0,
+            "energy_saved": cum_result["power_saved"] or 0,
             "total_water_saved": cum_result["cum_water_saved"] or 0,
             "total_plastic_avoided": cum_result["cum_plastic_avoided"] or 0,
             "total_miles_avoided": cum_result["cum_miles_avoided"] or 0,
-            "total_yield": cum_result["cum_yeild"] or 0,
-            "total_energy_saved": cum_result["cum_energy_saved"] or 0})
+            "total_yield": round(cum_result["cum_yeild"] or 0, 2),
+            "total_energy_saved": round(cum_result["cum_energy_saved"] or 0, 2)})
     except Exception as e:
-        print(f"Error fetching ESG data: {type(e)} – {e}")
+        log.error(f"Error fetching ESG data: {type(e)} – {e}")
         return jsonify({"error": "Failed to fetch ESG data"}), 500
 
 #New
@@ -620,7 +600,7 @@ def esg_data():
 def set_light_settings():
     try:
         data = request.json
-        print(f"Setting Light ON/OFF time:  ", data)
+        log.info(f"Setting Light ON/OFF time: {data}")
         with sqlite3.connect(db_path) as conn:
             conn.execute("""INSERT INTO light_settings (id, on_hour, on_min, off_hour, off_min)
                         VALUES (1, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET
@@ -631,8 +611,22 @@ def set_light_settings():
             conn.commit()
         return jsonify({"result": True})
     except Exception as e:
-        print(f"Error updating Light time: {type(e)} – {e}")
+        log.error(f"Error updating Light time: {type(e)} – {e}")
         return jsonify({"result": False})
+
+#New
+@app.route("/GrowCycle/details", methods=["GET"])
+def get_last_grow_cycle_date():
+    try:
+        conn = get_db_connection()
+        result = conn.execute("SELECT start_date, end_date, growcycle_id FROM esg_summary ORDER BY id DESC LIMIT 1").fetchone()
+        conn.close()
+        return jsonify({"start_date": result["start_date"] if result else None,
+                         "end_date": result["end_date"] if result else None,
+                         "growcycle_id": result["growcycle_id"] if result else None})
+    except Exception as e:
+        log.error(f"Error fetching last Grow Cycle date: {type(e)} – {e}")
+        return jsonify({"error": "Failed to fetch last Grow Cycle date"}), 500
 
 if __name__ == '__main__':
     slave.start()

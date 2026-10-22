@@ -1,4 +1,4 @@
-import argparse, sqlite3, time, threading, requests
+import argparse, sqlite3, time, threading, requests,baselogger
 from sensirion_i2c_driver import LinuxI2cTransceiver, I2cConnection, CrcCalculator
 from sensirion_driver_adapters.i2c_adapter.i2c_channel import I2cChannel
 from sensirion_i2c_sen66.device import Sen66Device
@@ -16,6 +16,7 @@ _args, _unknown = _parser.parse_known_args()
 i2c_transceiver = None
 sensor = None
 indoorAQI_flag = True
+log = baselogger.get_logger("Support")
 
 def init_sensor():
     global sensor, i2c_transceiver
@@ -29,10 +30,10 @@ def init_sensor():
         time.sleep(1)
         sensor.start_continuous_measurement()
         indoorAQI_flag = True
-        print("SEN66 sensor initialized")
+        log.info("SEN66 sensor initialized")
         return True
     except Exception as e:
-        print(f"Failed to initialize SEN66 sensor: {e}")
+        log.error(f"Failed to initialize SEN66 sensor: {e}")
         indoorAQI_flag = False
         sensor = None
         return False
@@ -45,7 +46,7 @@ def ensure_table_columns(conn, table_name, columns):
     existing = get_table_columns(conn, table_name)
     for name, coltype in columns.items():
         if name not in existing:
-            print(f"Adding missing column '{name}' to '{table_name}'")
+            log.info(f"Adding missing column '{name}' to '{table_name}'")
             conn.execute(f'ALTER TABLE {table_name} ADD COLUMN {name} {coltype}')
 
 def init_tables():
@@ -167,7 +168,7 @@ def init_tables():
 
         'esg_summary': {
             'received_date': 'DATETIME',
-            'growcycle_id': 'INTEGER',
+            'growcycle_id': 'TEXT',
             'start_date': 'DATETIME',
             'end_date': 'DATETIME',
             'water_saved': 'REAL',
@@ -209,11 +210,11 @@ def init_tables():
                 conn.execute('''INSERT INTO oaq(mode, device_id, latitude, longitude) VALUES (?, ?, ?, ?)''',(
                         "api", None, str(cords['lat']),str(cords['lon'])))
             conn.commit()
-        print("All DB tables ready")
+        log.info("All DB tables ready")
         return True
 
     except sqlite3.Error as e:
-        print(f"DB init failed: {e}")
+        log.error(f"DB init failed: {e}")
         return False
 
 def calculate_pm25_aqi(pm25):
@@ -255,7 +256,7 @@ def read_sen66():
         return {"pm2p5": mass_concentration_pm2p5.value, "pm10":mass_concentration_pm10p0.value,"hum": humidity.value, "temp": temperature.value,
             "voc": voc_index.value,"nox":nox_index, "co2": co2.value, "aqi": aqi}
     except Exception as e:
-        print(f"Error reading SEN66: {type(e)} - {e}")
+        log.error(f"Error reading SEN66: {type(e)} - {e}")
         return {"error": "Sensor read failed"}
 
 def fetch_outdoor_aqi():
@@ -271,7 +272,7 @@ def fetch_outdoor_aqi():
                     lat = str(row[0]).strip()
                     lon = str(row[1]).strip()
         except Exception as err:
-            print(f"Could not read coordinates from oaq table, using defaults: {err}")
+            log.error(f"Could not read coordinates from oaq table, using defaults: {err}")
 
         url = f"{BASE_URL}?lat={lat}&lon={lon}&appid={API_KEY}"
         response = requests.get(url, timeout=10)
@@ -307,7 +308,7 @@ def fetch_outdoor_aqi():
                         sub_indices.append(500)
 
         if not sub_indices:
-            print("Unable to calculate AQI: No valid pollutant data")
+            log.error("Unable to calculate AQI: No valid pollutant data")
             return False
         aqi = min(max(sub_indices), 500)
 
@@ -318,11 +319,11 @@ def fetch_outdoor_aqi():
             comp.get("so2"), comp.get("o3"), comp.get("pm10"), comp.get("nh3")))
         conn.close()
 
-        print(f"Outdoor AQI data stored successfully. AQI: {aqi}")
+        log.info(f"Outdoor AQI data stored successfully. AQI: {aqi}")
         return True
 
     except Exception as e:
-        print(f"Error getting/storing outdoor AQI: {e}")
+        log.error(f"Error getting/storing outdoor AQI: {e}")
         return False
 
 def filter_data(stop_event):
@@ -343,14 +344,14 @@ def filter_data(stop_event):
                 cur=conn.cursor()
                 cur.execute('''SELECT timestamp FROM outdoor_aqi ORDER BY id DESC LIMIT 1''')
                 last_update = cur.fetchone()
-                print("last updated.....  ",last_update)
+                log.info(f"last updated.....  {last_update}")
                 if last_update:
-                    print("check time")
+                    log.info("check time")
                     time_code = datetime.strptime(last_update[0],"%Y-%m-%d %H:%M:%S").timestamp()
                     if time_code < int(time.time()) - 21630 :
                         fetch_outdoor_aqi()
                 else:
-                    print("not avaliable....")
+                    log.info("not avaliable....")
                     fetch_outdoor_aqi()
         
         data = read_sen66()
@@ -366,14 +367,14 @@ def filter_data(stop_event):
                         (data['pm2p5'], data['temp'], data['hum'], data['co2'], round(pre), data['voc'], data['pm10'])
                     )
                 conn.close()
-                print(f"Successfully inserted data: {data}")
+                log.info(f"Successfully inserted data: {data}")
             except sqlite3.Error as e:
-                print(f"DB write failed: {e}")
+                log.error(f"DB write failed: {e}")
         stop_event.wait(interval)
 
 def start_aqi_calc():
     if not init_tables():
-        print("Failed to initialize database tables. AQI thread not started.")
+        log.error("Failed to initialize database tables. AQI thread not started.")
         return None
     stop_event = threading.Event()
     thread = threading.Thread(target=filter_data, args=(stop_event,), daemon=True)

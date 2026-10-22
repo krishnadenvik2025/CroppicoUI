@@ -155,7 +155,7 @@ export class MainstatusComponent implements OnInit, OnChanges, OnDestroy {
     if (value <= moderateMax) return { txt: 'MODERATE', bg: '#ffedd5', fg: '#d97706' };
     return { txt: 'POOR', bg: '#fee2e2', fg: '#dc2626' };
   }
-  // indoor parameters
+  // indoor parameters'#fee2e2'
   get pm25Status() {
     return this.classify(this.IAQ?.pm2p5, 5, 15, 25);
   }
@@ -174,6 +174,15 @@ export class MainstatusComponent implements OnInit, OnChanges, OnDestroy {
   }
   get outcoStatus() {
     return this.classify(this.OAQ?.co, 800, 1000, 1500);
+  }
+  get outvocStatus() {
+    return this.classify(this.OAQ?.voc, 50, 100, 200);
+  }
+  get outno2Status() { 
+    return this.classify(this.OAQ?.no2, 50, 100, 200); 
+  } 
+  get outnh3Status() { 
+    return this.classify(this.OAQ?.nh3, 200, 400, 800); 
   }
 
   flippedCards: { [key: string]: boolean } = {};

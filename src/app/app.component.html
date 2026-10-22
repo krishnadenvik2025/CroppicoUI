@@ -126,7 +126,7 @@
     </div>
     <div style="z-index: 0 !important;" #mainContent>
       <app-mainstatus [meterData]="meterData" [allData]="allData" [IAQ]="IAQ" [OAQ]="OAQ" [outdoorMode]="outdoorMode"
-        [ESGData]="ESGData" (screenChanged)="currentMainScreen = $event"
+        [ESGData]="ESGData" (screenChanged)="onMainScreenChanged($event)"
         *ngIf="!show_settings_screen && !show_maintenance_screen && !show_info_screen "></app-mainstatus>
       <app-settings (screenSaverData)="screenSaverData($event)"
         *ngIf="show_settings_screen && !show_maintenance_screen && !show_info_screen"></app-settings>

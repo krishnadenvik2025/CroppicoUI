@@ -12,6 +12,7 @@ import { PdfViewerModule } from 'ng2-pdf-viewer';
 import { TopupDialogComponent } from './component/topup-dialog/topup-dialog.component';
 import { WaterControlDialogComponent } from './component/water-control-dialog/water-control-dialog.component';
 import { EmResetDialogComponent } from './component/em-reset-dialog/em-reset-dialog.component';
+import { WifiConnectionDialogComponent } from './component/wifi-connection-dialog/wifi-connection-dialog.component';
 
 @NgModule({
   declarations: [
@@ -22,7 +23,8 @@ import { EmResetDialogComponent } from './component/em-reset-dialog/em-reset-dia
     GuideComponent,
     TopupDialogComponent,
     WaterControlDialogComponent,
-    EmResetDialogComponent],
+    EmResetDialogComponent,
+    WifiConnectionDialogComponent],
   imports: [
     CommonModule,
     MaterialModule,

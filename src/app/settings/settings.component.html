@@ -289,7 +289,7 @@
             <span>Master Version : </span> {{versionData?.master}}
           </div>
           <div class="field">
-            <span>GUI Version : </span> 3.0
+            <span>GUI Version : </span> 3.2
           </div>
           <div class="field">
             <span>Local IP : </span> {{versionData?.local_ip}}
@@ -298,7 +298,7 @@
       </ng-template>
     </li>
 
-    <!-- System -->
+    <!-- Wifi Settings -->
     <li [ngbNavItem]="6">
       <a ngbNavLink>System</a>
       <ng-template ngbNavContent>
@@ -319,23 +319,6 @@
                 <div *ngIf="wifiname?.ssid!=curWifiName">Click to connect</div>
               </div>
             </div>
-
-            <!-- WiFi Connection Status Banner -->
-            <div class="wifi-status-banner wifi-status-connecting" *ngIf="wifiConnectionStatus === 'connecting'">
-              <div class="wifi-spinner-ring"></div>
-              <span class="wifi-status-text">Connecting to <strong>{{wifiConnectingSsid}}</strong>...</span>
-            </div>
-
-            <div class="wifi-status-banner wifi-status-success" *ngIf="wifiConnectionStatus === 'success'">
-              <div class="wifi-status-icon wifi-icon-success">✓</div>
-              <span class="wifi-status-text">Connected to <strong>{{wifiConnectingSsid}}</strong></span>
-            </div>
-
-            <div class="wifi-status-banner wifi-status-failed" *ngIf="wifiConnectionStatus === 'failed'">
-              <div class="wifi-status-icon wifi-icon-failed">✕</div>
-              <span class="wifi-status-text">Connection failed for <strong>{{wifiConnectingSsid}}</strong></span>
-            </div>
-
           </div>
         </div>
       </ng-template>
@@ -345,9 +328,7 @@
     <li [ngbNavItem]="7">
       <a ngbNavLink>Calibration</a>
       <ng-template ngbNavContent>
-
         <div style="display: flex;justify-content: center;margin-top: 10px;">
-
           <mat-card class="mat-elevation-z3">
             <mat-card-title class="header-bg p-10">Sensor Calibration</mat-card-title>
             <div class="p-10 align-row m-t-12">
@@ -355,28 +336,9 @@
                 (click)="openCalibarionPopup(1,'ph','SENSOR')">PH</button>
               <button class="button-class" mat-raised-button color="primary"
                 (click)="openCalibarionPopup(2,'ec','SENSOR')">EC</button>
-              <!-- <button class="button-class" mat-raised-button color="primary"
-                (click)="openCalibarionPopup(3,'flow_sensor','PUMP')">Flow Sensor</button> -->
             </div>
-
           </mat-card>
-          <!-- <mat-card class="mat-elevation-z3">
-            <mat-card-title class="header-bg p-10">Pump Calibration</mat-card-title>
-            <div class="p-10 align-row m-t-12">
-              <button class="button-class" mat-raised-button color="primary"
-                (click)="openCalibarionPopup(1,'ec_a_pump','PUMP')">EC
-                A PUMP</button>
-              <button class="button-class" mat-raised-button color="primary"
-                (click)="openCalibarionPopup(2,'ec_b_pump','PUMP')">EC
-                B PUMP</button>
-            </div>
-          </mat-card> -->
         </div>
-
-
-        <!-- <button mat-raised-button color="primary">Sensor Calibration</button>
-          <button mat-raised-button color="primary">Pump Calibration</button> -->
-
       </ng-template>
     </li>
 
@@ -384,7 +346,6 @@
     <li [ngbNavItem]="8">
       <a ngbNavLink>System Setting</a>
       <ng-template ngbNavContent>
-
         <div style="display: flex;justify-content: space-between;">
           <div style="display: flex;flex-direction: column;gap: 5px;align-items: center;width: 30%;">
             <mat-card-title class="p-10" style="color: #2565AE;">System Type</mat-card-title>
@@ -422,7 +383,9 @@
               <button mat-raised-button style="line-height: 10px;" class="bg-failed">Cancel</button>
             </div>
           </div>
+
           <span class="vertical-line" style="height: 14rem;"></span>
+          
           <form style="justify-content: initial;" #lightSettings="ngForm">
             <mat-card-title style="background-color: transparent;border: none;" class="header-bg p-10">Light
               Settings</mat-card-title>
@@ -461,34 +424,9 @@
             </div>
           </form>
         </div>
-
       </ng-template>
     </li>
 
-    <!-- OAQ Settings
-    <li [ngbNavItem]="9">
-      <a ngbNavLink>OAQ Settings</a>
-      <ng-template ngbNavContent>
-        <div style="padding: 5px; display: flex; flex-direction: row; gap: 10px;">
-          <div style="display: flex;flex-direction: column;gap: 5px;align-items: center;width: 100%;">
-            <mat-card-title class="p-10" style="color: #2565AE;">Outdoor Air Quality </mat-card-title>
-            <mat-radio-group id="radio-button" [value]="oaqSelection" (change)="onOaqOptionSelected($event.value)">
-              <mat-radio-button style="font-weight: 550;font-size: 16px;" value="API">API</mat-radio-button>
-              <mat-radio-button style="font-weight: 550;font-size: 16px;" value="Sensor">Sensor</mat-radio-button>
-            </mat-radio-group>
-            <div *ngIf="oaqSelection === 'Sensor' && oaqDeviceId"
-              style="margin-top: 10px; font-weight: 600; color: #2565AE;">
-              Device ID: {{ oaqDeviceId }}
-            </div>
-            <div style="margin-top: 17px;height: 30px;display: flex;gap: 17px;" class="subrow">
-              <button style="line-height: 10px;" mat-raised-button disableOneSec class="bg-success" type="submit"
-                value="Update" (click)="changeOAQType(oaqSelection,oaqDeviceId)">Update</button>
-              <button mat-raised-button style="line-height: 10px;" class="bg-failed">Cancel</button>
-            </div>
-          </div>
-        </div>
-      </ng-template>
-    </li> -->
     <!-- OAQ Settings -->
     <li [ngbNavItem]="9">
       <a ngbNavLink>OAQ Settings</a>
@@ -501,7 +439,7 @@
           </mat-card-title>
 
           <mat-radio-group id="radio-button" [value]="oaqSelection" (change)="onOaqOptionSelected($event.value)"
-            style="display: flex; gap: 35px; margin: 10px 0;">
+            style="display: flex; gap: 35px; margin: 5px 0;">
             <mat-radio-button style="font-weight: 550; font-size: 12px;" value="API">
               Weathermap API
             </mat-radio-button>
@@ -514,7 +452,7 @@
           <div *ngIf="oaqSelection === 'Sensor'"
             style=" display: flex; flex-direction: column; align-items: center; gap: 8px;">
             <div
-              style="font-weight: 600; color: #2565AE; font-size: 12px; display: flex; align-items: center; gap: 12px;">
+              style="font-weight: 600; color: #2565AE; font-size: 12px; display: flex; align-items: center; gap: 10px;">
               <span>Device ID: {{ oaqDeviceId || 'None' }}</span>
               <button mat-stroked-button color="primary" type="button"
                 style="line-height: 26px; height: 28px; font-size: 10px;" (click)="openSensorDeviceDialog()">
@@ -563,7 +501,7 @@
           </div>
 
           <!-- Action Buttons -->
-          <div style="margin-top: 10px; height: 32px; display: flex; gap: 17px;" class="subrow">
+          <div style="margin-top: 8px; height: 32px; display: flex; gap: 17px;" class="subrow">
             <button mat-raised-button disableOneSec class="bg-success" type="button" style="line-height: 10px;"
               (click)="changeOAQType(oaqSelection, oaqDeviceId)">
               Update
