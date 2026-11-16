@@ -15,7 +15,6 @@ import { NgxVirtualKeyboardModule } from 'ngx-virtual-keyboard';
 import { KeypadComponent } from './keypad/keypad.component';
 import { HttpClientModule } from '@angular/common/http';
 import { QrCodeModule } from 'ng-qrcode';
-import { KeyboardComponent } from './keyboard/keyboard.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MaterialModule } from 'src/assets/material/material.module';
 import { SharedModule } from 'src/shared/shared.module';
@@ -32,7 +31,6 @@ import { ScreenSaverService } from 'src/core/screen-saver.service';
     MaintenanceComponent,
     MainstatusComponent,
     KeypadComponent,
-    KeyboardComponent,
     InfoComponent,
     DisableOneSecDirective
   ],

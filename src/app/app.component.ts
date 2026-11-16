@@ -46,14 +46,12 @@ export class AppComponent implements OnInit, OnChanges {
   footerTransitionTimeout: any;
   footerVisible = true;
   footerMessages: any = {
-    1: [],
-    2: [
-      "Aligning your workspace with UN Sustainable Development Goals 2, 12, and 13.",
-      "Supporting sustainable consumption and production practices.",
-      "Reducing environmental impact through smart monitoring.",
-      "Creating awareness about indoor environmental quality.",
-      "Building healthier and greener workplaces."
-    ]
+    0: ["Farm-Assist program that manages your crops’ needs, all running 24/7."],
+    1: ["Grown on-site: fresh harvest, 0 food miles, no packaging waste, less water consumption.",
+      "These greens are locals, not frequent fliers."],
+    2: ["Live indoor air quality, so you always know the air quality around you"],
+    3: ["Real-time outdoor air readings, so you always know what’s out there."],
+    4: ["Live indoor vs outdoor air quality, so you always know the difference."]
   };
   brightness_level: number = 5;
   light_last_updated: number = 0;
@@ -292,21 +290,21 @@ export class AppComponent implements OnInit, OnChanges {
     });
     if (growcycledata) {
       this.GrowCycleData = growcycledata;
-      if (this.GrowCycleData?.end_date) {
-        this.footerMessages[1] = [
-          `Grow cycle ended on ${this.GrowCycleData?.end_date || 'N/A'} - ${this.GrowCycleData?.growcycle_id || 'N/A'} (No Active Grow Cycle)`,
-        ];
-      } else if (this.GrowCycleData?.start_date) {
-        this.footerMessages[1] = [
-          `Grow cycle started on ${this.GrowCycleData?.start_date || 'N/A'} - ${this.GrowCycleData?.growcycle_id || 'N/A'} (Live)`,
-          
-        ];
-      }
-      else {
-        this.footerMessages[1] = [
-          `Grow cycle not started Yet`,
-        ];
-      }
+      //   if (this.GrowCycleData?.end_date) {
+      //     this.footerMessages[1] = [
+      //       `Grow cycle ended on ${this.GrowCycleData?.end_date || 'N/A'} - ${this.GrowCycleData?.growcycle_id || 'N/A'} (No Active Grow Cycle)`,
+      //     ];
+      //   } else if (this.GrowCycleData?.start_date) {
+      //     this.footerMessages[1] = [
+      //       `Grow cycle started on ${this.GrowCycleData?.start_date || 'N/A'} - ${this.GrowCycleData?.growcycle_id || 'N/A'} (Live)`,
+
+      //     ];
+      //   }
+      //   else {
+      //     this.footerMessages[1] = [
+      //       `Grow cycle not started Yet`,
+      //     ];
+      //   }
     }
   }
   async getAQI() {
@@ -591,6 +589,7 @@ export class AppComponent implements OnInit, OnChanges {
   }
   showHome() {
     console.log("Moving to Home screen");
+    this.onMainScreenChanged(0);
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
     }
@@ -678,6 +677,52 @@ export class AppComponent implements OnInit, OnChanges {
       });
     });
   }
+  get currentScreenTitle(): string {
+    switch (this.currentMainScreen) {
+      case 0:
+        return 'Precision Farming';
+      case 1:
+        return 'Sustainability Impact';
+      case 2:
+        return 'Indoor Air Quality';
+      case 3:
+        return 'Outdoor Air Quality';
+      case 4:
+        return 'Indoor Vs Outdoor Air Quality Comparison'
+      default:
+        return '';
+    }
+  }
+
+  get isGrowCycleActive(): boolean {
+    return Boolean(this.GrowCycleData?.start_date && !this.GrowCycleData?.end_date);
+  }
+
+  formatGrowCycleDate(dateStr: string | null | undefined): string {
+    if (!dateStr) return '';
+    try {
+      const cleanDate = String(dateStr).split(' ')[0].split('T')[0];
+      const parts = cleanDate.split('-');
+      if (parts.length === 3) {
+        const year = parseInt(parts[0], 10);
+        const monthIndex = parseInt(parts[1], 10) - 1;
+        const day = parseInt(parts[2], 10);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        if (!isNaN(day) && monthIndex >= 0 && monthIndex < 12 && !isNaN(year)) {
+          return `${day} ${months[monthIndex]} ${year}`;
+        }
+      }
+      const d = new Date(dateStr);
+      if (!isNaN(d.getTime())) {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+      }
+    } catch (e) {
+      console.error('Error formatting grow cycle date:', e);
+    }
+    return String(dateStr);
+  }
+
   get currentFooterText(): string {
     const messages = this.footerMessages[this.currentMainScreen] || [];
     return messages[this.currentFooterIndex] || '';
@@ -689,6 +734,7 @@ export class AppComponent implements OnInit, OnChanges {
       this.showScreenSaver = false;
       console.log('im awake!');
       clearInterval(this.clearScreenSaverInterval);
+      this.onMainScreenChanged(0);
     }
 
     clearTimeout(this.countDown);
@@ -699,6 +745,7 @@ export class AppComponent implements OnInit, OnChanges {
       console.log("screenSaverStatus", this.screenSaverStatus)
       console.log('im idle');
       this.fetchImageUrl();
+      this.onMainScreenChanged(0);
     }, this.idleAfterSeconds);
   }
 

@@ -26,7 +26,6 @@ import {
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { CalibrationDialogComponent } from 'src/shared/component/calibration-dialog/calibration-dialog.component';
 import { AuthComponent } from 'src/shared/component/auth/auth.component';
-import { WifiConnectionDialogComponent } from 'src/shared/component/wifi-connection-dialog/wifi-connection-dialog.component';
 import { APIS } from 'src/shared/model/api.model';
 import { ScreenSaverService } from 'src/core/screen-saver.service';
 
@@ -46,8 +45,6 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
   mActive = false;
   wifinamelist: any[] = [];
   curWifiName: string = "";
-  wifiConnectionStatus: 'idle' | 'connecting' | 'success' | 'failed' = 'idle';
-  wifiConnectingSsid: string = '';
   slaveVersion: any = "00.0";
   versionData: any;
   private intervalId: any;
@@ -497,10 +494,10 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
     return (num.value >= num.min && num.value <= num.max);
   }
 
-  httpPost(method: string, body: any): Promise<any> {
+  httpPost(method: string, body: any) {
     console.log("Http Post : ", method, body);
     const endpoint = method.startsWith('/') ? method.substring(1) : method;
-    return new Promise<any>((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       this.http.post<any>(this.url + "/" + endpoint, body).subscribe({
         next: data => {
           resolve(data);
@@ -512,32 +509,14 @@ export class SettingsComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       });
     });
+    return true;
   }
 
-  async connectToWifi(ssid: string, password: string) {
-    if (this.wifiConnectionStatus === 'connecting') {
-      return;
-    }
-
-    this.wifiConnectingSsid = ssid;
-    this.wifiConnectionStatus = 'connecting';
-    const statusDialog = this.dialog.open(WifiConnectionDialogComponent, {
-      panelClass: 'dialog-responsive',
-      disableClose: true,
-      data: { ssid }
-    });
-
-    const result = await this.httpPost('system/connectwifi', {
+  connectToWifi(ssid: string, password: string) {
+    this.httpPost('system/connectwifi', {
       "ssid": ssid,
       "pwd": password
     });
-    if (result?.res === true) {
-      this.wifiConnectionStatus = 'success';
-      this.curWifiName = ssid;
-    } else {
-      this.wifiConnectionStatus = 'failed';
-    }
-    statusDialog.componentInstance.status = this.wifiConnectionStatus;
   }
 
   handleWifiClick(wifi: any) {

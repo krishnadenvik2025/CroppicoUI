@@ -10,7 +10,7 @@ import { environment } from 'src/environments/environment';
 })
 export class EmResetDialogComponent {
   public status: 'CONFIRMATION' | 'LOADING' | 'SUCCESS' | 'FAILED' = 'CONFIRMATION';
-  public statusMessage: string = 'Are you sure you want to reset the energy meter?';
+  public statusMessage: string = 'Are you sure you want to reset ESG values?';
   public url = environment.api;
 
   constructor(

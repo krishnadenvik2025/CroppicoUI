@@ -1,63 +1,3 @@
-.data-space {
-  height: 250px;
-  display: flex;
-  flex-direction: column;
-  background-color: aqua;
-}
-
-.data-space>.data-circles {
-  padding-top: 5px;
-  display: flex;
-  flex-direction: row;
-  /* padding-left: 100px; */
-  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-  /* background-color: aqua; */
-}
-
-.data-circles>.water-status-circle {
-  margin-left: 80px;
-  display: flex;
-  flex-direction: column;
-}
-
-.data-circles>.water-status-circle>apx-chart {
-  margin-top: -10px;
-  height: 350px;
-  position: fixed;
-  z-index: 999;
-  /* background-color: rgba(199, 255, 249, 0.5); */
-}
-
-.water-status-circle>.water-status-data {
-  margin-top: 20px;
-  margin-left: 45px;
-  color: black;
-  /* background-color: rgba(223, 118, 223,0.5); */
-  z-index: 9;
-}
-
-.data-circles>.ambience-status-circle {
-  margin-left: 500px;
-  height: 250px;
-  position: fixed;
-  /* background-color: rgba(233, 97, 73,0.5); */
-}
-
-.data-circles>.ambience-status-circle>apx-chart {
-  margin-top: -170px;
-  position: fixed;
-  height: 200px;
-  z-index: 9991;
-  /* background-color: aquamarine; */
-}
-
-.ambience-status-circle>.ambience-status-data {
-  color: black;
-  margin-top: 75px;
-  margin-left: 80px;
-  z-index: 19;
-  /* background-color: rgba(94, 64, 230, 0.5); */
-}
 
 /* Screen 0: Main Status - sensor + operational card grid */
 .status-grid {
@@ -323,25 +263,6 @@
   width: 100%;
 }
 
-.screen-footer {
-  position: fixed;
-  bottom: 350px;
-  right: 720px;
-  /* Just to the left of the Home button */
-  font-size: 16px;
-  font-weight: bold;
-  color: #1e62d0;
-  /* Match the aesthetic blue */
-  background: transparent;
-  box-shadow: none;
-  border: none;
-  padding: 0;
-  margin: 0;
-  z-index: 9999;
-  text-align: right;
-  animation: fadeIn 0.3s ease-in-out;
-}
-
 /* Screen 1: Indoor Air Quality Dashboard */
 .aqi-screen {
   display: flex;
@@ -370,31 +291,76 @@
   flex: 1;
 }
 
-.oaq-panel {
-  flex: 0 0 65%;
-  max-width: 60%;
-  border-radius: 22px;
-  background: linear-gradient(160deg, #f5f9ff 0%, #eef4fc 100%);
-  border: 1px solid #e1eaf7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  padding: 16px;
+.compare-screen-wrapper {
+  padding: 3px 5px;
+  box-sizing: border-box;
+  height: 244px;
+  width: 100%;
 }
 
-.aqi-compare-panel {
-  max-width: 99%;
-  height: 200%;
-  border-radius: 22px;
+.oaq-panel {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  border-radius: 18px;
   background: linear-gradient(160deg, #f5f9ff 0%, #eef4fc 100%);
   border: 1px solid #e1eaf7;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 14px;
-  padding: 16px;
+  justify-content: space-evenly;
+  padding: 10px 24px;
 }
+
+.oaq-panel .aqi-gauge-wrap {
+  width: 150px;
+  height: 150px;
+}
+
+.oaq-panel .aqi-gauge-center {
+  margin-top: 12px;
+}
+
+.oaq-panel .aqi-gauge-value {
+  font-size: 38px;
+  font-weight: 800;
+  color: #1f2937;
+  line-height: 1;
+}
+
+.oaq-panel .aqi-gauge-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+.oaq-panel .aqi-panel-heading {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1e62d0;
+  letter-spacing: 0.5px;
+}
+
+.oaq-panel .aqi-panel-rating {
+  font-size: 26px;
+  font-weight: 800;
+  color: #1f2937;
+}
+
+.oaq-panel .aqi-difference-value {
+  font-size: 30px;
+  font-weight: 700;
+  color: #34465a;
+}
+
+.oaq-panel .aqi-difference-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #7b8490;
+  margin-top: 6px;
+}
+
 
 .aqi-gauge-wrap {
   position: relative;
@@ -488,7 +454,7 @@
 .param-pm25 {
   background-color: #f5f0ff;
   border-color: #e4d7fb;
-  width: 97%;
+  width: 98%;
 }
 
 .param-co2 {
@@ -511,7 +477,7 @@
 .param-no2 {
   background-color: #eef8ff;
   border-color: #cfe8f7;
-  width: 96%;
+  width: 98%;
 }
 
 .param-nh3 {
@@ -807,293 +773,3 @@
   margin-top: 4px;
 }
 
-/* Screen 2: compare card centered + outdoor value cards on the right */
-.compare-screen {
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  justify-content: center;
-  gap: 14px;
-  padding: 12px 15px 6px 15px;
-  flex: 1;
-  height: 100%;
-}
-
-.compare-card {
-  flex: 1 1 auto;
-  border-radius: 22px;
-  background: linear-gradient(135deg, #eef6ff 0%, #f5f0ff 55%, #fff7ed 100%);
-  border: 1px solid #e5e7eb;
-  padding: 16px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-}
-
-.compare-values-col {
-  flex: 0 0 220px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.compare-value-card {
-  flex: 1;
-  justify-content: center;
-}
-
-.compare-value-card .outdoor-value {
-  font-size: 26px;
-  margin-top: 2px;
-}
-
-/* Screen 3: Indoor vs Outdoor Air Quality */
-.outdoor-screen {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 12px 15px 6px 15px;
-  flex: 1;
-  height: 100%;
-}
-
-.compare-hero {
-  flex: auto;
-  border-radius: 22px;
-  background: linear-gradient(135deg, #eef6ff 0%, #f5f0ff 55%, #fff7ed 100%);
-  border: 1px solid #e5e7eb;
-  padding: auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.compare-side {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  flex: 0 0 auto;
-  min-width: 110px;
-}
-
-.compare-icon {
-  width: 25px;
-  height: 25px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #2563eb;
-  margin-bottom: 2px;
-}
-
-.compare-icon-outdoor {
-  background-color: #0e7490;
-}
-
-.compare-label {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-  color: #203621;
-}
-
-.compare-value {
-  font-size: 32px;
-  font-weight: 800;
-  line-height: 1.1;
-}
-
-.compare-rating {
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.compare-divider {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  flex: 0 0 auto;
-  padding: 0 10px;
-}
-
-.compare-diff-badge {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 15px;
-  font-weight: 800;
-}
-
-.compare-diff-badge.better {
-  background-color: #dcfce7;
-  color: #16a34a;
-}
-
-.compare-diff-badge.worse {
-  background-color: #fee2e2;
-  color: #dc2626;
-}
-
-.compare-diff-label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  color: #9ca3af;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.outdoor-param-row {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 8px;
-}
-
-.outdoor-param-card {
-  border-radius: 12px;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  min-height: 92px;
-}
-
-.param-out-pm25 {
-  background-color: #f5f0ff;
-  border-color: #e4d7fb;
-}
-
-.param-out-pm10 {
-  background-color: #eef5ff;
-  border-color: #d3e3f9;
-}
-
-.param-out-o3 {
-  background-color: #fdf5ea;
-  border-color: #f5e2c2;
-}
-
-.param-out-no2 {
-  background-color: #eef8ff;
-  border-color: #cfe8f7;
-}
-
-.param-out-so2 {
-  background-color: #f0fdfa;
-  border-color: #ccfbf1;
-}
-
-.param-out-co {
-  background-color: #fdf0f0;
-  border-color: #f5d0d0;
-}
-
-.param-out-pm25 .outdoor-icon {
-  background-color: #7c3aed;
-}
-
-.param-out-pm10 .outdoor-icon {
-  background-color: #2563eb;
-}
-
-.param-out-o3 .outdoor-icon {
-  background-color: #b45309;
-}
-
-.param-out-no2 .outdoor-icon {
-  background-color: #0369a1;
-}
-
-.param-out-so2 .outdoor-icon {
-  background-color: #0f766e;
-}
-
-.param-out-co .outdoor-icon {
-  background-color: #b91c1c;
-}
-
-.outdoor-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-}
-
-.outdoor-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.outdoor-badge {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.3px;
-  border-radius: 10px;
-  padding: 3px 8px;
-  white-space: nowrap;
-}
-
-.outdoor-badge-neutral {
-  background-color: rgba(107, 114, 128, 0.12);
-  color: #6b7280;
-}
-
-.outdoor-bottom {
-  margin-top: 8px;
-}
-
-.outdoor-value {
-  font-size: 16px;
-  font-weight: 800;
-  color: #1f2937;
-  line-height: 1;
-}
-
-.outdoor-unit {
-  font-size: 10px;
-  font-weight: 600;
-  color: #6b7280;
-  margin-left: 3px;
-}
-
-.outdoor-label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-  color: #6b7280;
-  text-transform: uppercase;
-  margin-top: 3px;
-}
-
-.aqi-difference {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.aqi-difference-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #34465a;
-  flex-direction: column;
-}
-
-.aqi-difference-label {
-  margin-top: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #7b8490;
-  text-align: center;
-  white-space: nowrap;
-}

@@ -120,7 +120,109 @@ img.update {
   /* background-color: aliceblue; */
 }
 
+.page-title-pane {
+  display: flex;
+  align-items: center;
+  padding-left: 15px;
+  z-index: 1;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+  letter-spacing: -0.3px;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: absolute;
+  right: 15px;
+  height: 100%;
+  z-index: 1;
+}
+
+.grow-cycle-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 14px 4px 12px;
+  border-radius: 20px;
+  margin-right: 15px;
+  box-sizing: border-box;
+  user-select: none;
+  height: 42px;
+}
+
+.grow-cycle-badge.badge-active {
+  background-color: #e7ffeb;
+  border: 1px solid #006624;
+}
+
+.grow-cycle-badge.badge-inactive {
+  background-color: #fff2f2;
+  border: 1px solid #ff0000;
+}
+
+.grow-cycle-dot {
+  width: 10px;
+  height: 10px;
+  min-width: 10px;
+  border-radius: 50%;
+}
+
+.badge-active .grow-cycle-dot {
+  background-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
+}
+
+.badge-inactive .grow-cycle-dot {
+  background-color: #cc5656;
+  box-shadow: 0 0 0 2px rgba(240, 3, 3, 0.184);
+}
+
+.grow-cycle-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: left;
+}
+
+.grow-cycle-status {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  line-height: 1.25;
+}
+
+.badge-active .grow-cycle-status {
+  color: #15803d;
+}
+
+.badge-inactive .grow-cycle-status {
+  color: #c93333;
+}
+
+.grow-cycle-sub {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.badge-active .grow-cycle-sub {
+  color: #336d29;
+}
+
+.badge-inactive .grow-cycle-sub {
+  color: #b52b2b;
+}
+
 .content-space>.top-bar {
+  position: relative;
   margin-top: 10px;
   height: 50px;
   width: 1200px;
@@ -131,101 +233,21 @@ img.update {
   font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
-.top-bar>.notification-pane {
-  width: 400px;
-  height: 100%;
-  border-radius: 30px;
-  background-color: #696969;
-  /* margin-left: 10px; */
-}
-
-.top-bar>.warning-pane {
-  width: 400px;
-  height: 100%;
-  border-radius: 30px;
-  background-color: #ffffff;
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.4);
-  display: flex;
-  flex-direction: row-reverse;
-}
-
-.notification-icon {
-  margin-left: 10px;
-  margin-top: 10px;
-}
-
-.warning-icon {
-  margin-right: 10px;
-  margin-top: 10px;
-}
 
 .top-bar>.clock-pane {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  pointer-events: none;
   width: 300px;
   height: 100%;
   border-radius: 30px;
   text-align: center;
   font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
   color: black
-}
-
-.data-space {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.data-space>.data-circles {
-  padding-top: 30px;
-  display: flex;
-  flex-direction: row;
-  /* padding-left: 100px; */
-  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-  /* background-color: aqua; */
-}
-
-.data-circles>.water-status-circle {
-  margin-left: 80px;
-  display: flex;
-  flex-direction: column;
-}
-
-.data-circles>.water-status-circle>apx-chart {
-  margin-top: -10px;
-  height: 350px;
-  position: fixed;
-  /* z-index: 999; */
-  /* background-color: rgba(199, 255, 249, 0.5); */
-}
-
-.water-status-circle>.water-status-data {
-  margin-top: 120px;
-  margin-left: 45px;
-  color: black;
-  /* background-color: rgba(223, 118, 223,0.5); */
-  /* z-index: 9; */
-}
-
-.data-circles>.ambience-status-circle {
-  margin-left: 280px;
-  height: 250px;
-  position: fixed;
-  /* background-color: rgba(233, 97, 73,0.5); */
-}
-
-.data-circles>.ambience-status-circle>apx-chart {
-  margin-top: -170px;
-  position: fixed;
-  height: 200px;
-  /* z-index: 9991; */
-  /* background-color: aquamarine; */
-}
-
-.ambience-status-circle>.ambience-status-data {
-  color: black;
-  margin-top: 80px;
-  margin-left: 180px;
-  /* z-index: 19; */
-  /* background-color: rgba(94, 64, 230, 0.5); */
 }
 
 .content-space>.footer {

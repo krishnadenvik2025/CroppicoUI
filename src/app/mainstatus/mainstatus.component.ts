@@ -16,9 +16,9 @@ export class MainstatusComponent implements OnInit, OnChanges, OnDestroy {
   @Input() OAQ: any;
   @Input() outdoorMode: any;
   @Output() screenChanged = new EventEmitter<number>();
-  
+
   currentScreen: number = 0;
-  totalScreens: number = 4;
+  totalScreens: number = 5;
   readonly aqiGaugeRadius = 70;
   readonly aqiGaugeCircumference = 2 * Math.PI * 70;
   private intervalId: any;
@@ -30,12 +30,15 @@ export class MainstatusComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnInit(): void {
-    console.log("meterData",this.allData);
+    console.log("meterData", this.allData);
+    setTimeout(() => {
+      this.screenChanged.emit(this.currentScreen);
+    });
   }
 
   ngOnDestroy(): void {
     if (this.intervalId) {
-        clearInterval(this.intervalId);
+      clearInterval(this.intervalId);
     }
   }
 
@@ -129,8 +132,8 @@ export class MainstatusComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   get oaqGaugePercent(): number {
-    const percent = (this.outdoorAqiValue/300)*100;
-    return Math.min(Math.max(percent,0),100)
+    const percent = (this.outdoorAqiValue / 300) * 100;
+    return Math.min(Math.max(percent, 0), 100)
   }
 
   get aqiGaugeDashOffset(): number {
@@ -178,11 +181,11 @@ export class MainstatusComponent implements OnInit, OnChanges, OnDestroy {
   get outvocStatus() {
     return this.classify(this.OAQ?.voc, 50, 100, 200);
   }
-  get outno2Status() { 
-    return this.classify(this.OAQ?.no2, 50, 100, 200); 
-  } 
-  get outnh3Status() { 
-    return this.classify(this.OAQ?.nh3, 200, 400, 800); 
+  get outno2Status() {
+    return this.classify(this.OAQ?.no2, 50, 100, 200);
+  }
+  get outnh3Status() {
+    return this.classify(this.OAQ?.nh3, 200, 400, 800);
   }
 
   flippedCards: { [key: string]: boolean } = {};

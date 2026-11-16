@@ -234,7 +234,7 @@
         </div>
         <div class="ops-label">IRRIGATION</div>
         <div class="ops-state" [class.state-on]="allData?.data?.irrigation_state==1">
-          {{allData?.data ? allData.data.irrigation_state?allData.data.irrigation_state==1?'ON':'OFF':'-':'-'}}
+          {{allData?.data ? allData.data.irrigation_state?allData.data.irrigation_state==1?'ON':'OFF (Standby)':'-':'-'}}
         </div>
       </div>
       <!-- Chiller-->
@@ -253,7 +253,7 @@
         </div>
         <div class="ops-label">CHILLER</div>
         <div class="ops-state" [class.state-on]="allData?.data?.chiller_state==1">
-          {{allData?.data ? allData.data.chiller_state ? allData.data.chiller_state==1 ? 'ON':'OFF':'-':'-'}}
+          {{allData?.data ? allData.data.chiller_state ? allData.data.chiller_state==1 ? 'ON':'OFF (Standby)':'-':'-'}}
         </div>
       </div>
       <!-- Reservoir Level-->
@@ -297,11 +297,11 @@
                   <path d="M10 13a2.5 2.5 0 0 1 4-1" stroke="#167ffc" stroke-width="1.6" stroke-linecap="round" />
                 </svg>
               </div>
-              <div class="impact-panel-badge">CUMULATIVE</div>
+              <div class="impact-panel-badge">CUMULATIVE . SINCE {{ ESGData?.cum_date || "(Unavailable)" }}</div>
             </div>
             <div class="impact-panel-bottom">
               <div class="impact-panel-value">{{ ESGData?.total_water_saved || 0 }}<span
-                  class="impact-panel-unit">L</span></div>
+                  class="impact-panel-unit">Liters</span></div>
               <div class="impact-panel-label">Water Saved</div>
             </div>
           </div>
@@ -314,10 +314,11 @@
                   <path d="M10 13a2.5 2.5 0 0 1 4-1" stroke="#167ffc" stroke-width="1.6" stroke-linecap="round" />
                 </svg>
               </div>
-              <div class="impact-panel-badge">LAST BATCH</div>
+              <div class="impact-panel-badge">Last Grow Cycle Completed On {{ ESGData?.last_end || "(Unavailable)" }}</div>
             </div>
             <div class="impact-panel-bottom">
-              <div class="impact-panel-value">{{ ESGData?.water_saved || 0 }}<span class="impact-panel-unit">L</span>
+              <div class="impact-panel-value">{{ ESGData?.water_saved || 0 }}<span
+                  class="impact-panel-unit">Liters</span>
               </div>
               <div class="impact-panel-label">Water Saved</div>
             </div>
@@ -340,11 +341,11 @@
                       stroke="#2e7d32" stroke-width="1.8" stroke-linejoin="round" />
                   </svg>
                 </div>
-                <div class="impact-badge">CUMULATIVE</div>
+                <div class="impact-badge">CUMULATIVE . SINCE {{ ESGData?.cum_date || "(Unavailable)" }}</div>
               </div>
               <div class="impact-bottom">
                 <div class="impact-value">{{ ESGData?.total_yield || 0 }}<span class="impact-unit">kg</span></div>
-                <div class="impact-label">Fresh Harvest</div>
+                <div class="impact-label">Harvest</div>
               </div>
             </div>
             <div class="flip-card-face flip-card-back impact-card card-harvest">
@@ -358,11 +359,11 @@
                       stroke="#2e7d32" stroke-width="1.8" stroke-linejoin="round" />
                   </svg>
                 </div>
-                <div class="impact-badge">LAST BATCH</div>
+                <div class="impact-badge">Last Grow Cycle Completed On {{ ESGData?.last_end || "(Unavailable)" }}</div>
               </div>
               <div class="impact-bottom">
                 <div class="impact-value">{{ ESGData?.yield || 0 }}<span class="impact-unit">kg</span></div>
-                <div class="impact-label">Fresh Harvest</div>
+                <div class="impact-label">Harvest</div>
               </div>
             </div>
           </div>
@@ -385,12 +386,12 @@
                     <path d="M12 9.5v5" stroke="#ea580c" stroke-width="1.6" stroke-linecap="round" />
                   </svg>
                 </div>
-                <div class="impact-badge">CUMULATIVE</div>
+                <div class="impact-badge">CUMULATIVE . SINCE {{ ESGData?.cum_date || "(Unavailable)" }}</div>
               </div>
               <div class="impact-bottom">
                 <div class="impact-value">{{ ESGData?.total_plastic_avoided || 0 }}<span class="impact-unit">Bags</span>
                 </div>
-                <div class="impact-label">Plastic Diverted</div>
+                <div class="impact-label">Plastic Packaging Avoided</div>
               </div>
             </div>
             <div class="flip-card-face flip-card-back impact-card card-plastic">
@@ -407,11 +408,11 @@
                     <path d="M12 9.5v5" stroke="#ea580c" stroke-width="1.6" stroke-linecap="round" />
                   </svg>
                 </div>
-                <div class="impact-badge">LAST BATCH</div>
+                <div class="impact-badge">Last Grow Cycle Completed On {{ ESGData?.last_end || "(Unavailable)" }}</div>
               </div>
               <div class="impact-bottom">
                 <div class="impact-value">{{ ESGData?.plastic_avoided || 0 }}<span class="impact-unit">Bags</span></div>
-                <div class="impact-label">Plastic Diverted</div>
+                <div class="impact-label">Plastic Packaging Avoided</div>
               </div>
             </div>
           </div>
@@ -431,12 +432,12 @@
                     <path d="M8 22h8" stroke="#595bd4" stroke-width="1.8" stroke-linecap="round" />
                   </svg>
                 </div>
-                <div class="impact-badge">CUMULATIVE</div>
+                <div class="impact-badge">CUMULATIVE . SINCE {{ ESGData?.cum_date || "(Unavailable)" }}</div>
               </div>
               <div class="impact-bottom">
-                <div class="impact-value">{{ ESGData?.total_miles_avoided || 0 }}<span class="impact-unit">km</span>
+                <div class="impact-value">{{ ESGData?.total_miles_avoided || 0 }}<span class="impact-unit">kms</span>
                 </div>
-                <div class="impact-label">Miles Avoided</div>
+                <div class="impact-label">Food Distance Avoided</div>
               </div>
             </div>
             <div class="flip-card-face flip-card-back impact-card card-miles">
@@ -450,11 +451,11 @@
                     <path d="M8 22h8" stroke="#595bd4" stroke-width="1.8" stroke-linecap="round" />
                   </svg>
                 </div>
-                <div class="impact-badge">LAST BATCH</div>
+                <div class="impact-badge">Last Grow Cycle Completed On {{ ESGData?.last_end || "(Unavailable)" }}</div>
               </div>
               <div class="impact-bottom">
-                <div class="impact-value">{{ ESGData?.miles_avoided || 0 }}<span class="impact-unit">km</span></div>
-                <div class="impact-label">Miles Avoided</div>
+                <div class="impact-value">{{ ESGData?.miles_avoided || 0 }}<span class="impact-unit">kms</span></div>
+                <div class="impact-label">Food Distance Avoided</div>
               </div>
             </div>
           </div>
@@ -471,12 +472,13 @@
                       stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                 </div>
-                <div class="impact-badge">CUMULATIVE</div>
+                <div class="impact-badge">CUMULATIVE . SINCE {{ ESGData?.cum_date || "(Unavailable)" }}</div>
               </div>
               <div class="impact-bottom">
-                <div class="impact-value">{{ ESGData?.total_energy_saved || 0 }}<span class="impact-unit">Unit/kWh</span>
+                <div class="impact-value">{{ ESGData?.total_energy_saved || 0 }}<span
+                    class="impact-unit">kWh/Unit</span>
                 </div>
-                <div class="impact-label">Power Consumption</div>
+                <div class="impact-label">Power Consumed</div>
               </div>
             </div>
             <div class="flip-card-face flip-card-back impact-card card-power">
@@ -487,11 +489,12 @@
                       stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                 </div>
-                <div class="impact-badge">LAST BATCH</div>
+                <div class="impact-badge">Last Grow Cycle Completed On {{ ESGData?.last_end || "(Unavailable)" }}</div>
               </div>
               <div class="impact-bottom">
-                <div class="impact-value">{{ ESGData?.energy_saved || 0 }}<span class="impact-unit">Unit/kWh</span></div>
-                <div class="impact-label">Power Consumption</div>
+                <div class="impact-value">{{ ESGData?.energy_saved || 0 }}<span class="impact-unit">kWh/Unit</span>
+                </div>
+                <div class="impact-label">Power Consumed</div>
               </div>
             </div>
           </div>
@@ -523,25 +526,6 @@
           <div class="aqi-panel-rating">{{ aqiData.txt }}</div>
         </div>
       </div>
-      <!-- <div class="aqi-panel">
-        <div class="aqi-gauge-wrap">
-          <svg class="aqi-gauge-svg" viewBox="0 0 160 160">
-            <circle class="aqi-gauge-track" cx="80" cy="80" r="70"></circle>
-            <circle class="aqi-gauge-progress" cx="80" cy="80" r="70"
-              [attr.stroke]="aqiData.ring"
-              [style.strokeDasharray]="aqiGaugeCircumference"
-              [style.strokeDashoffset]="aqiGaugeDashOffset"></circle>
-          </svg>
-          <div class="aqi-gauge-center">
-            <div class="aqi-gauge-value">{{ aqiValue }}</div>
-            <div class="aqi-gauge-label">AQI</div>
-          </div>
-        </div>
-        <div class="aqi-panel-text">
-          <div class="aqi-panel-heading">OUTDOOR AIR</div>
-          <div class="aqi-panel-rating">{{ aqiData.txt }}</div>
-        </div>
-      </div> -->
 
       <div class="aqi-param-grid">
         <div class="aqi-param-card param-pm25">
@@ -648,116 +632,105 @@
   <div *ngIf="currentScreen === 3" class="screen-wrapper">
     <!-- OutdoorSensor -->
     <div *ngIf="outdoorMode === 1" class="screen-content oaq-screen">
-      <!-- Compare -->
-      <div class="oaq-panel">
-        <div class="aqi-panel-text">
-          <div class="aqi-panel-heading">INDOOR AIR</div>
-          <div class="aqi-panel-rating">{{ aqiData.txt }}</div>
-        </div>
-        <div class="aqi-gauge-wrap">
-          <svg class="aqi-gauge-svg" viewBox="0 0 160 160">
-            <circle class="aqi-gauge-track" cx="80" cy="80" r="70"></circle>
-            <circle class="aqi-gauge-progress" cx="80" cy="80" r="70" [attr.stroke]="aqiData.ring"
-              [style.strokeDasharray]="aqiGaugeCircumference" [style.strokeDashoffset]="aqiGaugeDashOffset"></circle>
-          </svg>
-          <div class="aqi-gauge-center">
-            <div class="aqi-gauge-value">{{ aqiValue }}</div>
-            <div class="aqi-gauge-label">IAQ</div>
-          </div>
-        </div>
-        <div class="aqi-gauge-wrap">
-          <svg class="aqi-gauge-svg" viewBox="0 0 160 160">
-            <circle class="aqi-gauge-track" cx="80" cy="80" r="70"></circle>
-            <circle class="aqi-gauge-progress" cx="80" cy="80" r="70" [attr.stroke]="outdoorAqiData.ring"
-              [style.strokeDasharray]="aqiGaugeCircumference" [style.strokeDashoffset]="aqiGaugeDashOffset"></circle>
-          </svg>
-          <div class="aqi-gauge-center">
-            <div class="aqi-gauge-value">{{ outdoorAqiValue }}</div>
-            <div class="aqi-gauge-label">OAQ</div>
-          </div>
-        </div>
-        <div class="aqi-panel-text">
-          <div class="aqi-panel-heading">OUTDOOR AIR</div>
-          <div class="aqi-panel-rating">{{ outdoorAqiData.txt }}</div>
-        </div>
-      </div>
-
-      <div class="aqi-param-grid">
-        <div class="aqi-param-card param-pm25">
-          <div class="param-top">
-            <div class="param-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M6.5 17.5H17.5C19.4 17.5 21 15.9 21 14C21 12.3 19.8 10.8 18.2 10.5C17.8 8 15.6 6 13 6C10.8 6 8.9 7.4 8.2 9.4C6.4 9.6 5 11.1 5 13C5 15.5 6.6 17.5 6.5 17.5Z"
-                  fill="#7c3aed" fill-opacity="0.15" stroke="#7c3aed" stroke-width="1.6" stroke-linecap="round"
-                  stroke-linejoin="round" />
-                <path d="M3.5 9.5C3 10.5 3.2 11.5 3.8 12" stroke="#7c3aed" stroke-width="1.2" stroke-linecap="round" />
-                <path d="M3.8 15.5C3.3 16.5 3.8 17.5 4.5 18" stroke="#7c3aed" stroke-width="1.2"
-                  stroke-linecap="round" />
-                <path d="M19.8 8.5C20.5 9.2 20.8 10.2 20.5 11" stroke="#7c3aed" stroke-width="1.2"
-                  stroke-linecap="round" />
-                <path d="M20 15.5C20.5 16.2 20.2 17.2 19.5 17.8" stroke="#7c3aed" stroke-width="1.2"
-                  stroke-linecap="round" />
-                <text x="12.5" y="14" text-anchor="middle" font-size="5" font-weight="bold" fill="#7c3aed"
-                  font-family="Arial, sans-serif" letter-spacing="-0.3">PM<tspan font-size="3.6" dy="1">2.5</tspan>
-                </text>
-              </svg>
+      <div class="screen-content aqi-screen">
+        <div class="aqi-panel">
+          <div class="aqi-gauge-wrap">
+            <svg class="aqi-gauge-svg" viewBox="0 0 160 160">
+              <circle class="aqi-gauge-track" cx="80" cy="80" r="70"></circle>
+              <circle class="aqi-gauge-progress" cx="80" cy="80" r="70" [attr.stroke]="outdoorAqiData.ring"
+                [style.strokeDasharray]="aqiGaugeCircumference" [style.strokeDashoffset]="oaqGaugeDashOffset"></circle>
+            </svg>
+            <div class="aqi-gauge-center">
+              <div class="aqi-gauge-value">{{ outdoorAqiValue }}</div>
+              <div class="aqi-gauge-label">OAQ</div>
             </div>
-            <div class="param-badge" [style.backgroundColor]="pm25Status.bg" [style.color]="pm25Status.fg">{{
-              pm25Status.txt }}</div>
           </div>
-          <div class="param-bottom">
-            <div class="param-label">OUTDOOR PM2.5</div>
-            <div class="param-value">{{OAQ?.pm2p5 ? (OAQ.pm2p5 | number:'1.2-2') : '-'}}<span
-                class="param-unit">µg/m³</span></div>
+          <div class="aqi-panel-text">
+            <div class="aqi-panel-heading">OUTDOOR AIR</div>
+            <div class="aqi-panel-rating">{{ outdoorAqiData.txt }}</div>
           </div>
         </div>
 
-        <div class="aqi-param-card param-co2">
-          <div class="param-top">
-            <div class="param-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M6.5 17.5H17.5C19.4 17.5 21 15.9 21 14C21 12.3 19.8 10.8 18.2 10.5C17.8 8 15.6 6 13 6C10.8 6 8.9 7.4 8.2 9.4C6.4 9.6 5 11.1 5 13C5 15.5 6.6 17.5 6.5 17.5Z"
-                  fill="#1d4ed8" fill-opacity="0.15" stroke="#1d4ed8" stroke-width="1.6" stroke-linecap="round"
-                  stroke-linejoin="round" />
-                <text x="12.5" y="14" text-anchor="middle" font-size="5.8" font-weight="bold" fill="#1d4ed8"
-                  font-family="Arial, sans-serif" letter-spacing="-0.2">CO<tspan font-size="4.2" dy="1.2">2</tspan>
-                </text>
-              </svg>
+        <div class="aqi-param-grid">
+          <div class="aqi-param-card param-pm25">
+            <div class="param-top">
+              <div class="param-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M6.5 17.5H17.5C19.4 17.5 21 15.9 21 14C21 12.3 19.8 10.8 18.2 10.5C17.8 8 15.6 6 13 6C10.8 6 8.9 7.4 8.2 9.4C6.4 9.6 5 11.1 5 13C5 15.5 6.6 17.5 6.5 17.5Z"
+                    fill="#7c3aed" fill-opacity="0.15" stroke="#7c3aed" stroke-width="1.6" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                  <path d="M3.5 9.5C3 10.5 3.2 11.5 3.8 12" stroke="#7c3aed" stroke-width="1.2"
+                    stroke-linecap="round" />
+                  <path d="M3.8 15.5C3.3 16.5 3.8 17.5 4.5 18" stroke="#7c3aed" stroke-width="1.2"
+                    stroke-linecap="round" />
+                  <path d="M19.8 8.5C20.5 9.2 20.8 10.2 20.5 11" stroke="#7c3aed" stroke-width="1.2"
+                    stroke-linecap="round" />
+                  <path d="M20 15.5C20.5 16.2 20.2 17.2 19.5 17.8" stroke="#7c3aed" stroke-width="1.2"
+                    stroke-linecap="round" />
+                  <text x="12.5" y="14" text-anchor="middle" font-size="5" font-weight="bold" fill="#7c3aed"
+                    font-family="Arial, sans-serif" letter-spacing="-0.3">PM<tspan font-size="3.6" dy="1">2.5</tspan>
+                  </text>
+                </svg>
+              </div>
+              <div class="param-badge" [style.backgroundColor]="pm25Status.bg" [style.color]="pm25Status.fg">
+                {{ pm25Status.txt }}</div>
             </div>
-            <div class="param-badge" [style.backgroundColor]="co2Status.bg" [style.color]="co2Status.fg">{{
-              co2Status.txt }}</div>
-          </div>
-          <div class="param-bottom">
-            <div class="param-label">OUTDOOR CO&#8322;</div>
-            <div class="param-value">{{OAQ?.co2 ? (OAQ.co2 | number:'1.0-0') : '-'}}<span class="param-unit">ppm</span>
+            <div class="param-bottom">
+              <div class="param-label">INDOOR PM2.5</div>
+              <div class="param-value">{{IAQ?.pm2p5 ? (IAQ.pm2p5 | number:'1.2-2') : '-'}}<span
+                  class="param-unit">µg/m³</span></div>
             </div>
           </div>
-        </div>
-        <div class="aqi-param-card param-voc">
-          <div class="param-top">
-            <div class="param-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M12 3C16 3 19.4 5.8 20.6 9.5M21 6.5V10H17.5" stroke="#0284c7" stroke-width="1.6"
-                  stroke-linecap="round" stroke-linejoin="round" />
-                <path d="M19 16C17.2 19.5 13.2 21.5 9 20.6M12.5 21.8L8.8 21L9.8 17.5" stroke="#0284c7"
-                  stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-                <path d="M5 15.5C3.5 12 4.2 7.8 7 5M3.8 9L6.8 4.8L7.8 8.2" stroke="#0284c7" stroke-width="1.6"
-                  stroke-linecap="round" stroke-linejoin="round" />
-                <path d="M12 14C12 11.5 14 9.8 16.2 9.8C16.2 12.3 14 14 12 14Z" fill="#0ea5e9" fill-opacity="0.3"
-                  stroke="#0284c7" stroke-width="1.3" stroke-linejoin="round" />
-                <path d="M12 14.5C12 12.2 10.2 10.8 8 10.8C8 13.1 10.2 14.5 12 14.5Z" fill="#0ea5e9" fill-opacity="0.3"
-                  stroke="#0284c7" stroke-width="1.3" stroke-linejoin="round" />
-                <path d="M9.8 16C10.5 15 12 13.5 12 11" stroke="#0284c7" stroke-width="1.1" stroke-linecap="round" />
-              </svg>
+
+          <div class="aqi-param-card param-co2">
+            <div class="param-top">
+              <div class="param-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M6.5 17.5H17.5C19.4 17.5 21 15.9 21 14C21 12.3 19.8 10.8 18.2 10.5C17.8 8 15.6 6 13 6C10.8 6 8.9 7.4 8.2 9.4C6.4 9.6 5 11.1 5 13C5 15.5 6.6 17.5 6.5 17.5Z"
+                    fill="#1d4ed8" fill-opacity="0.15" stroke="#1d4ed8" stroke-width="1.6" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                  <text x="12.5" y="14" text-anchor="middle" font-size="5.8" font-weight="bold" fill="#1d4ed8"
+                    font-family="Arial, sans-serif" letter-spacing="-0.2">CO<tspan font-size="4.2" dy="1.2">2</tspan>
+                  </text>
+                </svg>
+              </div>
+              <div class="param-badge" [style.backgroundColor]="co2Status.bg" [style.color]="co2Status.fg">{{
+                co2Status.txt }}</div>
             </div>
-            <div class="param-badge" [style.backgroundColor]="vocStatus.bg" [style.color]="vocStatus.fg">{{
-              vocStatus.txt }}</div>
+            <div class="param-bottom">
+              <div class="param-label">INDOOR CO&#8322;</div>
+              <div class="param-value">{{IAQ?.co2 ? (IAQ.co2 | number:'1.0-0') : '-'}}<span
+                  class="param-unit">ppm</span>
+              </div>
+            </div>
           </div>
-          <div class="param-bottom">
-            <div class="param-label">OUTDOORVOC</div>
-            <div class="param-value">{{OAQ?.voc ? (OAQ.voc | number:'1.0-0') : '-'}}<span class="param-unit"></span>
+
+          <div class="aqi-param-card param-voc">
+            <div class="param-top">
+              <div class="param-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 3C16 3 19.4 5.8 20.6 9.5M21 6.5V10H17.5" stroke="#0284c7" stroke-width="1.6"
+                    stroke-linecap="round" stroke-linejoin="round" />
+                  <path d="M19 16C17.2 19.5 13.2 21.5 9 20.6M12.5 21.8L8.8 21L9.8 17.5" stroke="#0284c7"
+                    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                  <path d="M5 15.5C3.5 12 4.2 7.8 7 5M3.8 9L6.8 4.8L7.8 8.2" stroke="#0284c7" stroke-width="1.6"
+                    stroke-linecap="round" stroke-linejoin="round" />
+                  <path d="M12 14C12 11.5 14 9.8 16.2 9.8C16.2 12.3 14 14 12 14Z" fill="#0ea5e9" fill-opacity="0.3"
+                    stroke="#0284c7" stroke-width="1.3" stroke-linejoin="round" />
+                  <path d="M12 14.5C12 12.2 10.2 10.8 8 10.8C8 13.1 10.2 14.5 12 14.5Z" fill="#0ea5e9"
+                    fill-opacity="0.3" stroke="#0284c7" stroke-width="1.3" stroke-linejoin="round" />
+                  <path d="M9.8 16C10.5 15 12 13.5 12 11" stroke="#0284c7" stroke-width="1.1" stroke-linecap="round" />
+                </svg>
+              </div>
+              <div class="param-badge" [style.backgroundColor]="vocStatus.bg" [style.color]="vocStatus.fg">{{
+                vocStatus.txt }}</div>
+            </div>
+            <div class="param-bottom">
+              <div class="param-label">INDOOR VOC INDEX</div>
+              <div class="param-value">{{IAQ?.voc ? (IAQ.voc | number:'1.0-0') : '-'}}<span class="param-unit"></span>
+              </div>
             </div>
           </div>
         </div>
@@ -765,27 +738,7 @@
     </div>
     <!-- OutdoorAPI -->
     <div *ngIf="outdoorMode === 2" class="screen-content oaq-screen">
-      <div class="oaq-panel">
-        <div class="aqi-panel-text">
-          <div class="aqi-panel-heading">INDOOR AIR</div>
-          <div class="aqi-panel-rating">{{ aqiData.txt }}</div>
-        </div>
-        <div class="aqi-gauge-wrap">
-          <svg class="aqi-gauge-svg" viewBox="0 0 160 160">
-            <circle class="aqi-gauge-track" cx="80" cy="80" r="70"></circle>
-            <circle class="aqi-gauge-progress" cx="80" cy="80" r="70" [attr.stroke]="aqiData.ring"
-              [style.strokeDasharray]="aqiGaugeCircumference" [style.strokeDashoffset]="aqiGaugeDashOffset"></circle>
-          </svg>
-          <div class="aqi-gauge-center">
-            <div class="aqi-gauge-value">{{ aqiValue }}</div>
-            <div class="aqi-gauge-label">IAQ</div>
-          </div>
-        </div>
-        <div class="aqi-difference">
-          <div class="aqi-difference-value">{{ aqiDiffAbsPercent }}%</div>
-          <div class="aqi-difference-label">{{ aqiIndoorIsCleaner ? 'Indoor is cleaner' : 'Indoor air quality is lower'
-            }}</div>
-        </div>
+      <div class="aqi-panel">
         <div class="aqi-gauge-wrap">
           <svg class="aqi-gauge-svg" viewBox="0 0 160 160">
             <circle class="aqi-gauge-track" cx="80" cy="80" r="70"></circle>
@@ -908,6 +861,47 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IAQ OAQ Comparision -->
+  <div *ngIf="currentScreen === 4" class="screen-wrapper compare-screen-wrapper screen-content">
+    <div class="oaq-panel">
+      <div class="aqi-panel-text">
+        <div class="aqi-panel-heading">INDOOR AIR</div>
+        <div class="aqi-panel-rating">{{ aqiData.txt }}</div>
+      </div>
+      <div class="aqi-gauge-wrap">
+        <svg class="aqi-gauge-svg" viewBox="0 0 160 160">
+          <circle class="aqi-gauge-track" cx="80" cy="80" r="70"></circle>
+          <circle class="aqi-gauge-progress" cx="80" cy="80" r="70" [attr.stroke]="aqiData.ring"
+            [style.strokeDasharray]="aqiGaugeCircumference" [style.strokeDashoffset]="aqiGaugeDashOffset"></circle>
+        </svg>
+        <div class="aqi-gauge-center">
+          <div class="aqi-gauge-value">{{ aqiValue }}</div>
+          <div class="aqi-gauge-label">IAQ</div>
+        </div>
+      </div>
+      <div class="aqi-difference">
+        <div class="aqi-difference-value">{{ aqiDiffAbsPercent }}%</div>
+        <div class="aqi-difference-label">{{ aqiIndoorIsCleaner ? 'Indoor is cleaner' : 'Outdoor is cleaner'
+          }}</div>
+      </div>
+      <div class="aqi-gauge-wrap">
+        <svg class="aqi-gauge-svg" viewBox="0 0 160 160">
+          <circle class="aqi-gauge-track" cx="80" cy="80" r="70"></circle>
+          <circle class="aqi-gauge-progress" cx="80" cy="80" r="70" [attr.stroke]="outdoorAqiData.ring"
+            [style.strokeDasharray]="aqiGaugeCircumference" [style.strokeDashoffset]="oaqGaugeDashOffset"></circle>
+        </svg>
+        <div class="aqi-gauge-center">
+          <div class="aqi-gauge-value">{{ outdoorAqiValue }}</div>
+          <div class="aqi-gauge-label">OAQ</div>
+        </div>
+      </div>
+      <div class="aqi-panel-text">
+        <div class="aqi-panel-heading">OUTDOOR AIR</div>
+        <div class="aqi-panel-rating">{{ outdoorAqiData.txt }}</div>
       </div>
     </div>
   </div>

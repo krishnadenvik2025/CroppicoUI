@@ -566,6 +566,7 @@ def esg_data():
     try:
         conn = get_db_connection()
         details = conn.execute("SELECT start_date, end_date, growcycle_id FROM esg_summary ORDER BY id DESC LIMIT 1").fetchone()
+        cum_date = conn.execute("SELECT end_date, growcycle_id FROM esg_summary ORDER BY id ASC LIMIT 1").fetchone()
         if details:
             start_date = details["start_date"]
             end_date = details["end_date"]
@@ -590,7 +591,9 @@ def esg_data():
             "total_plastic_avoided": cum_result["cum_plastic_avoided"] or 0,
             "total_miles_avoided": cum_result["cum_miles_avoided"] or 0,
             "total_yield": round(cum_result["cum_yeild"] or 0, 2),
-            "total_energy_saved": round(cum_result["cum_energy_saved"] or 0, 2)})
+            "total_energy_saved": round(cum_result["cum_energy_saved"] or 0, 2),
+            "last_end": end_date or "Unavailable",
+            "cum_date": cum_date["end_date"] or "Unavailable"})
     except Exception as e:
         log.error(f"Error fetching ESG data: {type(e)} – {e}")
         return jsonify({"error": "Failed to fetch ESG data"}), 500
